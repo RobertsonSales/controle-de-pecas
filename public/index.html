@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Controle de Estoque - Peças de Análises Clínicas</title>
-  <!-- Tailwind CSS via CDN -->
+  <title>Controle de Estoque & Manutenção - Análises Clínicas</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -15,19 +15,19 @@
   <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 sticky top-0 z-30 shadow-lg">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="p-2 bg-blue-600 rounded-lg text-white">
+        <div class="p-2.5 bg-blue-600 rounded-xl text-white shadow-md">
           <i class="ph ph-first-aid-kit text-2xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold text-white leading-tight">Estoque de Peças & Insumos</h1>
-          <p class="text-xs text-slate-400">Análises Clínicas & Diagnostic Devices</p>
+          <h1 class="text-xl font-bold text-white leading-tight">Estoque de Peças de Reposição</h1>
+          <p class="text-xs text-slate-400">Laboratório de Análises Clínicas & Engenharia Clínica</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <button onclick="fetchData()" class="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition">
+        <button onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">
           <i class="ph ph-arrows-clockwise text-base" id="refresh-icon"></i> Sincronizar
         </button>
-        <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 font-medium rounded-lg text-sm transition shadow-md">
+        <button onclick="openCreateModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-sm transition shadow-md">
           <i class="ph ph-plus-circle text-lg"></i> Nova Peça
         </button>
       </div>
@@ -37,11 +37,11 @@
   <!-- Conteúdo Principal -->
   <main class="max-w-7xl mx-auto w-full px-6 py-8 flex-1">
     
-    <!-- Barra de Filtros e Busca -->
+    <!-- Filtros -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="relative">
         <i class="ph ph-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-lg"></i>
-        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar por peça, função ou categoria..." 
+        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar peça, função ou categoria..." 
                class="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-slate-200">
       </div>
       <div>
@@ -62,108 +62,152 @@
     <!-- Indicador de Carregamento -->
     <div id="loading" class="flex flex-col items-center justify-center py-20 text-slate-400">
       <i class="ph ph-spinner animate-spin text-4xl text-blue-500 mb-2"></i>
-      <p class="text-sm">Carregando dados da planilha...</p>
+      <p class="text-sm">Carregando estoque da planilha...</p>
     </div>
 
-    <!-- Tabela de Peças -->
+    <!-- Tabela do Estoque -->
     <div id="tableContainer" class="hidden bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-700">
+          <thead class="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-700">
             <tr>
               <th class="p-4">Equipamento</th>
               <th class="p-4">Peça / Insumo</th>
               <th class="p-4">Categoria</th>
               <th class="p-4 text-center">Prioridade</th>
-              <th class="p-4 text-center">Estoque Atual</th>
+              <th class="p-4 text-center">Qtd Atual</th>
               <th class="p-4 text-center">Ações</th>
             </tr>
           </thead>
           <tbody id="inventoryBody" class="divide-y divide-slate-700/50">
-            <!-- As linhas serão inseridas via JavaScript -->
+            <!-- Linhas dinâmicas -->
           </tbody>
         </table>
       </div>
     </div>
   </main>
 
-  <!-- Modal Inserir Nova Peça -->
-  <div id="itemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-xl p-6 shadow-2xl space-y-4">
+  <!-- MODAL 1: Entrada / Saída de Estoque -->
+  <div id="movementModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-        <h3 class="text-lg font-bold text-white">Cadastrar Nova Peça</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+        <h3 id="movModalTitle" class="text-lg font-bold text-white">Movimentar Estoque</h3>
+        <button onclick="closeModal('movementModal')" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
       </div>
-      <form id="addForm" onsubmit="handleAddItem(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Equipamento/Modalidade</label>
-          <input type="text" id="newEquip" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+      <form onsubmit="handleStockMovement(event)" class="space-y-4">
+        <input type="hidden" id="movRowIndex">
+        <input type="hidden" id="movType">
+        
+        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+          <p class="text-xs text-slate-400">Peça selecionada:</p>
+          <p id="movPecaName" class="font-bold text-white text-base"></p>
         </div>
+
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Peça / Insumo Crítico</label>
-          <input type="text" id="newPeca" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <label class="block text-xs font-medium text-slate-300 mb-1">Quantidade da Operação</label>
+          <input type="number" id="movQty" min="1" value="1" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:border-blue-500">
         </div>
-        <div class="grid grid-cols-2 gap-3">
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Técnico Responsável *</label>
+          <input type="text" id="movTecnico" required placeholder="Nome do técnico de laboratório/engenheiro" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:border-blue-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-700">
+          <button type="button" onclick="closeModal('movementModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancelar</button>
+          <button type="submit" id="movSubmitBtn" class="px-4 py-2 rounded-lg text-sm font-semibold transition text-white"></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Incluir ou Editar Peça -->
+  <div id="itemFormModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-xl rounded-xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 id="formModalTitle" class="text-lg font-bold text-white">Formulário de Peça</h3>
+        <button onclick="closeModal('itemFormModal')" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+      </div>
+      <form id="itemForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+        <input type="hidden" id="formRowIndex">
+        <input type="hidden" id="formMode" value="create">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Categoria / Tipo</label>
-            <input type="text" id="newCat" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+            <label class="block text-xs text-slate-300 mb-1">Equipamento/Modalidade *</label>
+            <input type="text" id="formEquip" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Prioridade</label>
-            <select id="newPrio" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+            <label class="block text-xs text-slate-300 mb-1">Peça / Insumo Crítico *</label>
+            <input type="text" id="formPeca" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Categoria / Tipo</label>
+            <input type="text" id="formCat" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Prioridade Estoque</label>
+            <select id="formPrio" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
               <option value="Alta">Alta</option>
               <option value="Média">Média</option>
               <option value="Baixa">Baixa</option>
             </select>
           </div>
         </div>
+
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Função Principal</label>
-          <textarea id="newFunc" rows="2" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"></textarea>
+          <label class="block text-xs text-slate-300 mb-1">Função Principal</label>
+          <textarea id="formFunc" rows="2" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"></textarea>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Vida Útil / Prevalência</label>
-            <input type="text" id="newPrev" placeholder="Ex: 6 a 12 meses" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+            <label class="block text-xs text-slate-300 mb-1">Prevalência / Vida Útil</label>
+            <input type="text" id="formPrev" placeholder="Ex: 3 a 6 meses" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
           </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Qtd Inicial</label>
-            <input type="number" id="newQty" min="0" value="1" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <div id="initialQtyContainer">
+            <label class="block text-xs text-slate-300 mb-1">Qtd Inicial de Estoque</label>
+            <input type="number" id="formQty" min="0" value="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
           </div>
         </div>
+
+        <div id="tecnicoCadastroContainer">
+          <label class="block text-xs text-slate-300 mb-1">Técnico Responsável pelo Cadastro *</label>
+          <input type="text" id="formTecnico" placeholder="Nome do responsável" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+        </div>
+
         <div class="flex justify-end gap-3 pt-3 border-t border-slate-700">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancelar</button>
-          <button type="submit" id="saveBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold">Salvar Peça</button>
+          <button type="button" onclick="closeModal('itemFormModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancelar</button>
+          <button type="submit" id="formSaveBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold">Salvar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- JavaScript Application Logic -->
+  <!-- Script Lógico JS -->
   <script>
-    // A API_URL será injetada dinamicamente pelo servidor Node/Vercel ou lida de variável local
-    let API_URL = ""; 
+    let API_URL = "";
     let rawInventoryData = [];
 
-    // Inicialização da aplicação
     async function init() {
       try {
-        // Tenta buscar a variável de ambiente exposta pelo servidor
         const configRes = await fetch('/api/config');
         if (configRes.ok) {
           const config = await configRes.json();
           API_URL = config.apiUrl;
         }
       } catch (e) {
-        console.warn("Ambiente local sem endpoint /api/config. Certifique-se de configurar a API_URL.");
+        console.warn("Sem servidor de variáveis de ambiente. Certifique-se de preencher a API_URL.");
       }
       fetchData();
     }
 
-    // Busca dados no Google Sheets
     async function fetchData() {
       if (!API_URL) {
-        alert("URL do Google Apps Script não configurada! Verifique a variável VERCEL_EXPOSE_SHEETS_URL.");
+        alert("URL do Google Apps Script não configurada!");
         return;
       }
 
@@ -177,7 +221,7 @@
         populateEquipFilter();
         applyFilters();
       } catch (err) {
-        alert("Erro ao carregar dados da planilha. Verifique as permissões da implantação do Apps Script.");
+        alert("Erro ao buscar dados do Google Sheets.");
       } finally {
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('tableContainer').classList.remove('hidden');
@@ -185,17 +229,13 @@
       }
     }
 
-    // Preenche o filtro com os equipamentos únicos
     function populateEquipFilter() {
       const select = document.getElementById('equipFilter');
-      const uniqueEquips = [...new Set(rawInventoryData.map(i => i.equipamento))].sort();
+      const uniqueEquips = [...new Set(rawInventoryData.map(i => i.equipamento))].filter(Boolean).sort();
       select.innerHTML = '<option value="">Todos os Equipamentos</option>';
-      uniqueEquips.forEach(eq => {
-        if(eq) select.innerHTML += `<option value="${eq}">${eq}</option>`;
-      });
+      uniqueEquips.forEach(eq => { select.innerHTML += `<option value="${eq}">${eq}</option>`; });
     }
 
-    // Aplica os filtros de pesquisa
     function applyFilters() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const equip = document.getElementById('equipFilter').value;
@@ -213,13 +253,12 @@
       renderTable(filtered);
     }
 
-    // Renderiza a tabela HTML
     function renderTable(items) {
       const tbody = document.getElementById('inventoryBody');
       tbody.innerHTML = "";
 
       if(items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum item encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>`;
         return;
       }
 
@@ -245,24 +284,66 @@
               ${item.quantidade}
             </td>
             <td class="p-4 text-center">
-              <div class="inline-flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
-                <button onclick="updateQty(${item.rowIndex}, -1)" class="w-7 h-7 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-bold transition">-</button>
-                <button onclick="updateQty(${item.rowIndex}, 1)" class="w-7 h-7 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded font-bold transition">+</button>
-              </div>
+              <!-- Menu de Opções de Ações -->
+              <select onchange="handleActionSelect(this, ${item.rowIndex})" class="bg-slate-900 text-xs font-semibold text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer">
+                <option value="" selected disabled>Opções ⚙️</option>
+                <option value="entrada" class="text-emerald-400 font-bold">➕ Dar Entrada</option>
+                <option value="saida" class="text-red-400 font-bold">➖ Dar Baixa (Saída)</option>
+                <option value="editar" class="text-blue-400">✏️ Editar Cadastro</option>
+              </select>
             </td>
           </tr>
         `;
       });
     }
 
-    // Altera a quantidade no Google Sheets (+ / -)
-    async function updateQty(rowIndex, delta) {
+    // Handler do Selecionável de Ações
+    function handleActionSelect(selectElement, rowIndex) {
+      const action = selectElement.value;
+      selectElement.value = ""; // Reseta a seleção visual
+
+      if (action === "entrada") {
+        openMovementModal(rowIndex, "Entrada");
+      } else if (action === "saida") {
+        openMovementModal(rowIndex, "Saída");
+      } else if (action === "editar") {
+        openEditModal(rowIndex);
+      }
+    }
+
+    // Modal de Entrada e Saída
+    function openMovementModal(rowIndex, tipo) {
       const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
       if(!item) return;
 
-      const newQty = Math.max(0, item.quantidade + delta);
-      item.quantidade = newQty; // Atualização otimista na UI
-      document.getElementById(`qty-${rowIndex}`).innerText = newQty;
+      document.getElementById('movRowIndex').value = rowIndex;
+      document.getElementById('movType').value = tipo;
+      document.getElementById('movPecaName').innerText = `${item.peca} (${item.equipamento})`;
+      
+      const submitBtn = document.getElementById('movSubmitBtn');
+      if (tipo === "Entrada") {
+        document.getElementById('movModalTitle').innerText = "Dar Entrada no Estoque";
+        submitBtn.innerText = "Registrar Entrada";
+        submitBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white";
+      } else {
+        document.getElementById('movModalTitle').innerText = "Dar Baixa no Estoque (Saída)";
+        submitBtn.innerText = "Registrar Baixa";
+        submitBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-500 text-white";
+      }
+
+      openModal('movementModal');
+    }
+
+    async function handleStockMovement(e) {
+      e.preventDefault();
+      const rowIndex = parseInt(document.getElementById('movRowIndex').value);
+      const tipo = document.getElementById('movType').value;
+      const qtyInput = parseInt(document.getElementById('movQty').value);
+      const tecnico = document.getElementById('movTecnico').value;
+
+      const delta = tipo === "Entrada" ? qtyInput : -qtyInput;
+
+      closeModal('movementModal');
 
       try {
         await fetch(API_URL, {
@@ -270,59 +351,98 @@
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'updateQuantity',
+            action: 'stockMovement',
             rowIndex: rowIndex,
-            quantidade: newQty
+            quantidade: delta,
+            tipo: tipo,
+            tecnico: tecnico
           })
         });
-      } catch (e) {
-        alert("Erro ao sincronizar com o Google Sheets.");
+
+        alert(`Operação de ${tipo} registrada! Sincronizando...`);
+        setTimeout(fetchData, 1200);
+      } catch (err) {
+        alert("Erro ao enviar dados para a planilha.");
       }
     }
 
-    // Modal Handlers
-    function openModal() { document.getElementById('itemModal').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('itemModal').classList.add('hidden'); }
+    // Modal de Inclusão e Edição de Peças
+    function openCreateModal() {
+      document.getElementById('formModalTitle').innerText = "Cadastrar Nova Peça";
+      document.getElementById('formMode').value = "create";
+      document.getElementById('itemForm').reset();
+      document.getElementById('initialQtyContainer').classList.remove('hidden');
+      document.getElementById('tecnicoCadastroContainer').classList.remove('hidden');
+      openModal('itemFormModal');
+    }
 
-    // Cadastra nova peça na planilha
-    async function handleAddItem(e) {
+    function openEditModal(rowIndex) {
+      const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
+      if(!item) return;
+
+      document.getElementById('formModalTitle').innerText = "Editar Peça";
+      document.getElementById('formMode').value = "edit";
+      document.getElementById('formRowIndex').value = rowIndex;
+
+      // Pré-carrega formulário com dados existentes
+      document.getElementById('formEquip').value = item.equipamento;
+      document.getElementById('formPeca').value = item.peca;
+      document.getElementById('formCat').value = item.categoria;
+      document.getElementById('formPrio').value = item.prioridade;
+      document.getElementById('formFunc').value = item.funcao;
+      document.getElementById('formPrev').value = item.prevTroca;
+
+      // Oculta quantidade inicial no modo de edição (deve ser feita via Movimentação auditada)
+      document.getElementById('initialQtyContainer').classList.add('hidden');
+      document.getElementById('tecnicoCadastroContainer').classList.add('hidden');
+
+      openModal('itemFormModal');
+    }
+
+    async function handleFormSubmit(e) {
       e.preventDefault();
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.innerText = "Salvando...";
+      const mode = document.getElementById('formMode').value;
+      const btn = document.getElementById('formSaveBtn');
+      btn.disabled = true;
 
-      const newItem = {
-        equipamento: document.getElementById('newEquip').value,
-        peca: document.getElementById('newPeca').value,
-        categoria: document.getElementById('newCat').value,
-        prioridade: document.getElementById('newPrio').value,
-        funcao: document.getElementById('newFunc').value,
-        prevTroca: document.getElementById('newPrev').value,
-        quantidade: document.getElementById('newQty').value
+      const itemPayload = {
+        equipamento: document.getElementById('formEquip').value,
+        peca: document.getElementById('formPeca').value,
+        categoria: document.getElementById('formCat').value,
+        prioridade: document.getElementById('formPrio').value,
+        funcao: document.getElementById('formFunc').value,
+        prevTroca: document.getElementById('formPrev').value,
+        quantidade: document.getElementById('formQty').value,
+        tecnico: document.getElementById('formTecnico').value
       };
 
+      const payload = {
+        action: mode === "create" ? "addItem" : "editItem",
+        rowIndex: parseInt(document.getElementById('formRowIndex').value) || null,
+        item: itemPayload
+      };
+
+      closeModal('itemFormModal');
+
       try {
         await fetch(API_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'addItem',
-            item: newItem
-          })
+          body: JSON.stringify(payload)
         });
-        
-        alert("Peça adicionada! A atualização pode levar alguns segundos na planilha.");
-        closeModal();
-        document.getElementById('addForm').reset();
-        setTimeout(fetchData, 1500); // Recarrega os dados
-      } catch (e) {
-        alert("Erro ao adicionar item.");
+
+        alert("Operação salva com sucesso! Atualizando...");
+        setTimeout(fetchData, 1200);
+      } catch(err) {
+        alert("Erro ao salvar informações.");
       } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerText = "Salvar Peça";
+        btn.disabled = false;
       }
     }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     window.onload = init;
   </script>
