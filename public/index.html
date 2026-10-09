@@ -3,161 +3,919 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Controle de Estoque & Manutenção - Análises Clínicas</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="color-scheme" content="light dark" />
+  <title>Grupo Labmedic - Controle de Estoque & Manutenção</title>
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <!-- jsPDF e jsPDF-AutoTable para geração do Relatório PDF A4 Horizontal -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+  <script>
+    /* Aplica o tema antes da renderização para evitar "flash" de cor errada */
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var forced = params.get('theme');
+        var saved = null;
+        try { saved = localStorage.getItem('labmedic-theme'); } catch (e) {}
+        var theme = forced || saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <style>
+    /* ============================================================
+       TOKENS DE TEMA (CLARO / ESCURO)
+       ============================================================ */
+    :root {
+      --bg: #eef2f7;
+      --bg-soft: #f8fafc;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #52627a;
+      --text-dim: #8494a8;
+      --header-bg: rgba(255, 255, 255, 0.9);
+      --input-bg: #ffffff;
+      --table-head: #f1f5f9;
+      --row-hover: rgba(15, 23, 42, 0.045);
+      --shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.25);
+      --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.15);
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.1);
+      --on-accent: #ffffff;
+      --success: #059669;
+      --success-hover: #047857;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --warn: #d97706;
+      --card-bg: #ffffff;
+      --overlay: rgba(15, 23, 42, 0.6);
+      --badge-alta-bg: rgba(220, 38, 38, 0.1);
+      --badge-alta-tx: #b91c1c;
+      --badge-alta-bd: rgba(220, 38, 38, 0.28);
+      --badge-med-bg: rgba(217, 119, 6, 0.12);
+      --badge-med-tx: #b45309;
+      --badge-med-bd: rgba(217, 119, 6, 0.3);
+      --badge-bai-bg: rgba(5, 150, 105, 0.12);
+      --badge-bai-tx: #047857;
+      --badge-bai-bd: rgba(5, 150, 105, 0.3);
+      --hero-grad: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0891b2 100%);
+    }
 
-  <!-- Header da Aplicação -->
-  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 sticky top-0 z-30 shadow-lg">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="p-2.5 bg-blue-600 rounded-xl text-white shadow-md">
-          <i class="ph ph-first-aid-kit text-2xl"></i>
-        </div>
-        <div>
-          <h1 class="text-xl font-bold text-white leading-tight">Estoque de Peças de Reposição</h1>
-          <p class="text-xs text-slate-400">Laboratório de Análises Clínicas & Engenharia Clínica</p>
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --bg-soft: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #172033;
+      --border: #334155;
+      --border-strong: #475569;
+      --text: #f1f5f9;
+      --text-muted: #a4b3c6;
+      --text-dim: #7b8ba1;
+      --header-bg: rgba(15, 23, 42, 0.9);
+      --input-bg: #0f172a;
+      --table-head: #0f172a;
+      --row-hover: rgba(255, 255, 255, 0.05);
+      --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+      --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --accent-soft: rgba(59, 130, 246, 0.16);
+      --on-accent: #ffffff;
+      --success: #10b981;
+      --success-hover: #34d399;
+      --danger: #ef4444;
+      --danger-hover: #f87171;
+      --warn: #f59e0b;
+      --card-bg: #1e293b;
+      --overlay: rgba(0, 0, 0, 0.72);
+      --badge-alta-bg: rgba(239, 68, 68, 0.14);
+      --badge-alta-tx: #fca5a5;
+      --badge-alta-bd: rgba(239, 68, 68, 0.35);
+      --badge-med-bg: rgba(245, 158, 11, 0.16);
+      --badge-med-tx: #fcd34d;
+      --badge-med-bd: rgba(245, 158, 11, 0.38);
+      --badge-bai-bg: rgba(16, 185, 129, 0.16);
+      --badge-bai-tx: #6ee7b7;
+      --badge-bai-bd: rgba(16, 185, 129, 0.38);
+      --hero-grad: linear-gradient(135deg, #0f2557 0%, #1d4ed8 55%, #0e7490 100%);
+    }
+
+    /* ============================================================
+       BASE
+       ============================================================ */
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      transition: background-color .25s ease, color .25s ease;
+    }
+    h1, h2, h3, p { margin: 0; }
+    img { max-width: 100%; display: block; }
+    button, input, select, textarea { font-family: inherit; }
+    .hidden { display: none !important; }
+    .max-wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    header.app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--header-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; }
+    .brand-badge {
+      flex: 0 0 auto;
+      width: 44px; height: 44px;
+      display: grid; place-items: center;
+      border-radius: 13px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-size: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .brand-text { min-width: 0; }
+    .brand-text h1 {
+      font-size: 1.02rem;
+      font-weight: 800;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .brand-text p { font-size: .74rem; color: var(--text-muted); }
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* ============================================================
+       BOTÕES
+       ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-size: .84rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--panel-2);
+      color: var(--text);
+      transition: background-color .18s, color .18s, border-color .18s, transform .12s;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn i { font-size: 1.05rem; }
+    .btn-primary { background: var(--accent); color: var(--on-accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: var(--success-hover); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-strong); }
+    .btn-ghost:hover { background: var(--row-hover); }
+    .btn-soft { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+    .btn-soft:hover { background: var(--row-hover); }
+    .btn-block { width: 100%; }
+    .icon-btn {
+      width: 42px; min-width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 11px;
+      font-size: 1.2rem;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      transition: background-color .18s, color .18s;
+    }
+    .icon-btn:hover { background: var(--row-hover); }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============================================================
+       PÁGINA INICIAL (HOME)
+       ============================================================ */
+    .hero {
+      position: relative;
+      background: var(--hero-grad);
+      color: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 20px 0 22px;
+      box-shadow: var(--shadow);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      padding: 34px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+    .hero h2 {
+      font-size: clamp(1.7rem, 5.4vw, 2.9rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -.6px;
+    }
+    .hero h2 span { display: block; font-weight: 900; }
+    .hero p.lead { font-size: .98rem; max-width: 620px; color: rgba(255, 255, 255, 0.92); }
+    .hero .hero-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .hero .btn-glass {
+      background: rgba(255, 255, 255, 0.95);
+      color: #12306b;
+      border-color: transparent;
+    }
+    .hero .btn-glass:hover { background: #fff; }
+    .hero .btn-outline-glass {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .hero .btn-outline-glass:hover { background: rgba(255, 255, 255, 0.18); }
+    .hero-blob {
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      filter: blur(10px);
+      right: -90px; top: -120px;
+      z-index: 1;
+    }
+
+    /* Carrossel */
+    .carousel {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+    .carousel-track { position: relative; width: 100%; height: 220px; }
+    .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .6s ease;
+    }
+    .carousel-slide.active { opacity: 1; visibility: visible; }
+    .carousel-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      background: var(--panel-2);
+    }
+    .carousel-caption {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 30px 18px 16px;
+      background: linear-gradient(to top, rgba(3, 9, 22, 0.9) 0%, rgba(3, 9, 22, 0.45) 55%, transparent 100%);
+      color: #fff;
+    }
+    .carousel-caption h3 { font-size: 1.05rem; font-weight: 800; }
+    .carousel-caption p { font-size: .8rem; color: rgba(255, 255, 255, 0.85); margin-top: 2px; }
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(3, 9, 22, 0.45);
+      color: #fff;
+      display: grid; place-items: center;
+      cursor: pointer;
+      font-size: 1.15rem;
+      z-index: 3;
+      transition: background-color .2s;
+    }
+    .carousel-nav:hover { background: rgba(3, 9, 22, 0.75); }
+    .carousel-nav.prev { left: 10px; }
+    .carousel-nav.next { right: 10px; }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      padding: 12px;
+      background: var(--panel);
+    }
+    .carousel-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: none;
+      background: var(--border-strong);
+      cursor: pointer;
+      padding: 0;
+      transition: width .25s, background-color .25s;
+    }
+    .carousel-dot.active { width: 24px; border-radius: 999px; background: var(--accent); }
+
+    /* Cards de recursos */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .feature-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform .18s, border-color .18s;
+    }
+    .feature-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .feature-card i { font-size: 1.7rem; color: var(--accent); }
+    .feature-card h3 { font-size: .95rem; font-weight: 800; margin: 10px 0 5px; }
+    .feature-card p { font-size: .82rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Barra de views */
+    .view-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 4px 0 16px;
+    }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: .83rem; color: var(--text-muted); }
+
+    /* ============================================================
+       FILTROS + TABELA
+       ============================================================ */
+    .filters {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .field { position: relative; }
+    .field > i.search-icon {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+    input.control, select.control, textarea.control {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 13px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px; /* evita zoom automático no iOS */
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+    }
+    input.control::placeholder, textarea.control::placeholder { color: var(--text-dim); }
+    input.control:focus, select.control:focus, textarea.control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .field.with-icon input.control { padding-left: 38px; }
+    select.control { cursor: pointer; appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 20px, calc(100% - 13px) 20px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 34px;
+    }
+    .filter-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: .73rem;
+      font-weight: 700;
+    }
+
+    .status-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px dashed var(--border-strong);
+      background: var(--panel-2);
+      color: var(--text-muted);
+      font-size: .86rem;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .status-box i { font-size: 1.3rem; color: var(--warn); flex: 0 0 auto; }
+    .loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .loading-box i { font-size: 2.2rem; color: var(--accent); }
+
+    .table-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table.inventory { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 720px; }
+    table.inventory thead th {
+      background: var(--table-head);
+      color: var(--text-muted);
+      text-align: left;
+      font-weight: 700;
+      font-size: .74rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    table.inventory tbody td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+    table.inventory tbody tr:last-child td { border-bottom: none; }
+    table.inventory tbody tr:hover { background: var(--row-hover); }
+    .cell-strong { font-weight: 700; color: var(--text); }
+    .cell-sub { font-size: .76rem; color: var(--text-dim); margin-top: 2px; }
+    .qty-cell { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.05rem; color: var(--text); text-align: center; }
+    .center { text-align: center; }
+    .badge {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .badge-alta { background: var(--badge-alta-bg); color: var(--badge-alta-tx); border-color: var(--badge-alta-bd); }
+    .badge-media { background: var(--badge-med-bg); color: var(--badge-med-tx); border-color: var(--badge-med-bd); }
+    .badge-baixa { background: var(--badge-bai-bg); color: var(--badge-bai-tx); border-color: var(--badge-bai-bd); }
+    select.action-select {
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 11px;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 40px;
+      outline: none;
+    }
+    select.action-select:focus { border-color: var(--accent); }
+
+    /* ============================================================
+       MODAIS
+       ============================================================ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: var(--overlay);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .modal-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 560px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+    }
+    .modal-card.narrow { max-width: 440px; }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .modal-head h3 { font-size: 1.06rem; font-weight: 800; color: var(--text); }
+    .modal-close {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1.35rem; line-height: 1;
+      width: 36px; height: 36px; border-radius: 9px;
+      display: grid; place-items: center;
+    }
+    .modal-close:hover { background: var(--row-hover); color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .form-row label { font-size: .78rem; font-weight: 600; color: var(--text-muted); }
+    .modal-foot {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding-top: 14px; margin-top: 6px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .selected-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 11px 13px;
+      margin-bottom: 14px;
+    }
+    .selected-item span { font-size: .73rem; color: var(--text-dim); display: block; }
+    .selected-item strong { font-size: .95rem; color: var(--text); }
+
+    /* ============================================================
+       TOAST
+       ============================================================ */
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 24px);
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: .85rem;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      max-width: min(92vw, 420px);
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+    #toast.ok { border-left-color: var(--success); }
+    #toast.err { border-left-color: var(--danger); }
+
+    footer.app-footer {
+      border-top: 1px solid var(--border);
+      padding: 18px 0;
+      margin-top: auto;
+      font-size: .78rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* ============================================================
+       RESPONSIVO
+       ============================================================ */
+    @media (max-width: 900px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+      .filters .field-all { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      .brand-text h1 { font-size: .9rem; white-space: normal; }
+      .header-inner { gap: 10px; }
+      .header-actions { width: 100%; justify-content: flex-start; }
+      .header-actions .btn { flex: 1 1 auto; }
+      .hero-inner { padding: 26px 18px; }
+      .carousel-track { height: 190px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .modal { align-items: flex-start; padding-top: 24px; }
+      .modal-card { padding: 16px; }
+    }
+    @media (max-width: 560px) {
+      .max-wrap { padding: 0 12px; }
+      .filters { grid-template-columns: 1fr; }
+      .carousel-track { height: 168px; }
+      .carousel-caption { padding: 22px 14px 12px; }
+      .carousel-caption h3 { font-size: .95rem; }
+      .carousel-nav { width: 34px; height: 34px; font-size: 1rem; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .modal-foot { flex-direction: column-reverse; }
+      .modal-foot .btn { width: 100%; }
+      table.inventory { font-size: .82rem; }
+      table.inventory thead th, table.inventory tbody td { padding: 11px 10px; }
+      .view-bar { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================ HEADER ============================ -->
+  <header class="app-header">
+    <div class="max-wrap header-inner">
+      <div class="brand" onclick="goHome()" title="Voltar à página inicial">
+        <div class="brand-badge"><i class="ph ph-first-aid-kit"></i></div>
+        <div class="brand-text">
+          <h1>GRUPO LABMEDIC</h1>
+          <p>Estoque de Peças de Reposição &amp; Engenharia Clínica</p>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <!-- Botão Exportar PDF -->
-        <button onclick="exportToPDF()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-lg text-sm text-white transition shadow-md">
-          <i class="ph ph-file-pdf text-lg"></i> Exportar PDF
+      <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">
+          <i class="ph ph-moon" id="themeIcon"></i>
         </button>
-        <button onclick="fetchData()" class="flex items-center gap-2 px-3.5 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">
-          <i class="ph ph-arrows-clockwise text-base" id="refresh-icon"></i> Sincronizar
+        <button class="btn btn-soft hidden" id="btnExport" onclick="exportToPDF()">
+          <i class="ph ph-file-pdf"></i> Exportar PDF
         </button>
-        <button onclick="openCreateModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-sm transition shadow-md">
-          <i class="ph ph-plus-circle text-lg"></i> Nova Peça
+        <button class="btn btn-soft hidden" id="btnSync" onclick="fetchData()">
+          <i class="ph ph-arrows-clockwise" id="refresh-icon"></i> Sincronizar
+        </button>
+        <button class="btn btn-primary hidden" id="btnNew" onclick="openCreateModal()">
+          <i class="ph ph-plus-circle"></i> Nova Peça
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Conteúdo Principal -->
-  <main class="max-w-7xl mx-auto w-full px-6 py-8 flex-1">
-    
-    <!-- Filtros -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="relative">
-        <i class="ph ph-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-lg"></i>
-        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar peça, função ou categoria..." 
-               class="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-slate-200">
-      </div>
-      <div>
-        <select id="equipFilter" onchange="applyFilters()" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-slate-200">
-          <option value="">Todos os Equipamentos</option>
-        </select>
-      </div>
-      <div>
-        <select id="prioFilter" onchange="applyFilters()" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-slate-200">
-          <option value="">Todas as Prioridades</option>
-          <option value="Alta">Alta Prioridade</option>
-          <option value="Média">Média Prioridade</option>
-          <option value="Baixa">Baixa Prioridade</option>
-        </select>
-      </div>
-    </div>
+  <main class="max-wrap" style="flex:1; padding-bottom:40px;">
 
-    <!-- Indicador de Carregamento -->
-    <div id="loading" class="flex flex-col items-center justify-center py-20 text-slate-400">
-      <i class="ph ph-spinner animate-spin text-4xl text-blue-500 mb-2"></i>
-      <p class="text-sm">Carregando estoque da planilha...</p>
-    </div>
-
-    <!-- Tabela de Peças -->
-    <div id="tableContainer" class="hidden bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-700">
-            <tr>
-              <th class="p-4">Equipamento</th>
-              <th class="p-4">Peça / Insumo</th>
-              <th class="p-4">Categoria</th>
-              <th class="p-4 text-center">Prioridade</th>
-              <th class="p-4 text-center">Qtd Atual</th>
-              <th class="p-4 text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="inventoryBody" class="divide-y divide-slate-700/50">
-            <!-- Linhas dinâmicas inseridas via JavaScript -->
-          </tbody>
-        </table>
+    <!-- ======================= PÁGINA INICIAL ======================= -->
+    <section id="homeView">
+      <div class="hero">
+        <div class="hero-blob"></div>
+        <div class="hero-inner">
+          <span class="hero-tag"><i class="ph ph-flask"></i> Análises Clínicas &amp; Engenharia Clínica</span>
+          <h2>Bem-vindo ao <span>GRUPO LABMEDIC</span></h2>
+          <p class="lead">Central única para controlar peças, insumos críticos e a manutenção preventiva dos equipamentos laboratoriais — com rastreabilidade de cada entrada e saída.</p>
+          <div class="hero-cta">
+            <button class="btn btn-glass" onclick="showDashboard()">
+              <i class="ph ph-squares-four"></i> Acessar Painel de Estoque
+            </button>
+            <button class="btn btn-outline-glass" onclick="scrollToFeatures()">
+              <i class="ph ph-info"></i> Conhecer recursos
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <!-- Carrossel de imagens -->
+      <div class="carousel" id="carousel" aria-label="Galeria de imagens do Grupo Labmedic">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-slide active">
+            <img src="https://sspark.genspark.ai/i/MEMfr7GwvTMArmHW?width=1600" alt="Analisador laboratorial de análises clínicas" loading="eager" />
+            <div class="carousel-caption">
+              <h3>Equipamentos de Análises Clínicas</h3>
+              <p>Monitoramento das peças críticas dos analisadores bioquímicos e hematológicos.</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://sspark.genspark.ai/i/yNzn0yveWWec4Xr9?width=1600" alt="Técnico utilizando microscópio para examinar amostra" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Precisão Diagnóstica</h3>
+              <p>Equipamentos calibrados e abastecidos para garantir a confiabilidade dos exames.</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://sspark.genspark.ai/i/IWB5f4LJQOILi5AQ?width=1600" alt="Manutenção de equipamentos biomédicos" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Engenharia Clínica</h3>
+              <p>Manutenção preventiva e corretiva com registro do técnico responsável.</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://sspark.genspark.ai/i/vJFgvC2dhqkVhXnk?width=1600" alt="Laboratório de análises e controle de qualidade" loading="lazy" />
+            <div class="carousel-caption">
+              <h3>Gestão de Estoque</h3>
+              <p>Entrada e baixa de peças com saldo sempre atualizado e relatórios em PDF.</p>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-nav prev" onclick="moveSlide(-1)" aria-label="Imagem anterior"><i class="ph ph-caret-left"></i></button>
+        <button class="carousel-nav next" onclick="moveSlide(1)" aria-label="Próxima imagem"><i class="ph ph-caret-right"></i></button>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+
+      <div class="feature-grid" id="features">
+        <div class="feature-card">
+          <i class="ph ph-clipboard-text"></i>
+          <h3>Cadastro de Peças</h3>
+          <p>Equipamento, categoria, função principal, vida útil e prioridade em um só formulário.</p>
+        </div>
+        <div class="feature-card">
+          <i class="ph ph-arrows-down-up"></i>
+          <h3>Entradas e Saídas</h3>
+          <p>Movimente o estoque informando o técnico responsável e mantenha o histórico rastreável.</p>
+        </div>
+        <div class="feature-card">
+          <i class="ph ph-file-pdf"></i>
+          <h3>Relatório em PDF</h3>
+          <p>Exporte o relatório A4 horizontal com os filtros aplicados e o resumo executivo.</p>
+        </div>
+        <div class="feature-card">
+          <i class="ph ph-funnel"></i>
+          <h3>Filtros Inteligentes</h3>
+          <p>Busque por peça, função, categoria, equipamento ou prioridade — e limpe tudo com um clique.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PAINEL (DASHBOARD) ======================= -->
+    <section id="dashboardView" class="hidden">
+      <div class="view-bar">
+        <div class="breadcrumb">
+          <i class="ph ph-squares-four"></i>
+          <span>Painel de Estoque</span>
+          <i class="ph ph-caret-right" style="font-size:.7rem"></i>
+          <span id="resultsCount">—</span>
+        </div>
+        <button class="btn btn-ghost" onclick="goHome()"><i class="ph ph-house"></i> Página inicial</button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters">
+        <div class="field with-icon field-all">
+          <i class="ph ph-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar peça, função ou categoria..." class="control" />
+        </div>
+        <div class="field">
+          <select id="equipFilter" onchange="applyFilters()" class="control">
+            <option value="">Todos os Equipamentos</option>
+          </select>
+        </div>
+        <div class="field">
+          <select id="prioFilter" onchange="applyFilters()" class="control">
+            <option value="">Todas as Prioridades</option>
+            <option value="Alta">Alta Prioridade</option>
+            <option value="Média">Média Prioridade</option>
+            <option value="Baixa">Baixa Prioridade</option>
+          </select>
+        </div>
+        <div class="field">
+          <button class="btn btn-soft btn-block" onclick="clearFilters()" title="Limpar todos os filtros">
+            <i class="ph ph-eraser"></i> Limpar Filtros
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-hint" id="filterHint"></div>
+
+      <div class="status-box hidden" id="statusBox"></div>
+
+      <div class="loading-box" id="loading">
+        <i class="ph ph-spinner spin"></i>
+        <p>Carregando estoque da planilha...</p>
+      </div>
+
+      <div class="table-card hidden" id="tableContainer">
+        <div class="table-scroll">
+          <table class="inventory">
+            <thead>
+              <tr>
+                <th>Equipamento</th>
+                <th>Peça / Insumo</th>
+                <th>Categoria</th>
+                <th class="center">Prioridade</th>
+                <th class="center">Qtd Atual</th>
+                <th class="center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- MODAL 1: Entrada / Saída de Estoque -->
-  <div id="movementModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-        <h3 id="movModalTitle" class="text-lg font-bold text-white">Movimentar Estoque</h3>
-        <button onclick="closeModal('movementModal')" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+  <footer class="app-footer">
+    <div class="max-wrap">GRUPO LABMEDIC — Sistema de Gestão de Estoque &amp; Manutenção · Hospitalar &amp; Laboratorial</div>
+  </footer>
+
+  <!-- ============================ MODAL: MOVIMENTAR ESTOQUE ============================ -->
+  <div id="movementModal" class="modal hidden">
+    <div class="modal-card narrow">
+      <div class="modal-head">
+        <h3 id="movModalTitle">Movimentar Estoque</h3>
+        <button class="modal-close" onclick="closeModal('movementModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
       </div>
-      <form onsubmit="handleStockMovement(event)" class="space-y-4">
+      <form onsubmit="handleStockMovement(event)">
         <input type="hidden" id="movRowIndex">
         <input type="hidden" id="movType">
-        
-        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
-          <p class="text-xs text-slate-400">Peça selecionada:</p>
-          <p id="movPecaName" class="font-bold text-white text-base"></p>
+
+        <div class="selected-item">
+          <span>Peça selecionada</span>
+          <strong id="movPecaName"></strong>
         </div>
 
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">Quantidade da Operação</label>
-          <input type="number" id="movQty" min="1" value="1" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:border-blue-500">
+        <div class="form-row">
+          <label for="movQty">Quantidade da Operação</label>
+          <input type="number" id="movQty" min="1" value="1" required class="control">
         </div>
 
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">Técnico Responsável *</label>
-          <input type="text" id="movTecnico" required placeholder="Nome do técnico de laboratório/engenheiro" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:border-blue-500">
+        <div class="form-row">
+          <label for="movTecnico">Técnico Responsável *</label>
+          <input type="text" id="movTecnico" required placeholder="Nome do técnico de laboratório/engenheiro" class="control">
         </div>
 
-        <div class="flex justify-end gap-3 pt-3 border-t border-slate-700">
-          <button type="button" onclick="closeModal('movementModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancelar</button>
-          <button type="submit" id="movSubmitBtn" class="px-4 py-2 rounded-lg text-sm font-semibold transition text-white"></button>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-soft" onclick="closeModal('movementModal')">Cancelar</button>
+          <button type="submit" id="movSubmitBtn" class="btn btn-primary">Registrar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 2: Incluir ou Editar Peça -->
-  <div id="itemFormModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-xl rounded-xl p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-        <h3 id="formModalTitle" class="text-lg font-bold text-white">Formulário de Peça</h3>
-        <button onclick="closeModal('itemFormModal')" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+  <!-- ============================ MODAL: CADASTRAR / EDITAR PEÇA ============================ -->
+  <div id="itemFormModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="formModalTitle">Formulário de Peça</h3>
+        <button class="modal-close" onclick="closeModal('itemFormModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
       </div>
-      <form id="itemForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+      <form id="itemForm" onsubmit="handleFormSubmit(event)">
         <input type="hidden" id="formRowIndex">
         <input type="hidden" id="formMode" value="create">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-300 mb-1">Equipamento/Modalidade *</label>
-            <input type="text" id="formEquip" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="formEquip">Equipamento/Modalidade *</label>
+            <input type="text" id="formEquip" required class="control">
           </div>
-          <div>
-            <label class="block text-xs text-slate-300 mb-1">Peça / Insumo Crítico *</label>
-            <input type="text" id="formPeca" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <div class="form-row">
+            <label for="formPeca">Peça / Insumo Crítico *</label>
+            <input type="text" id="formPeca" required class="control">
           </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-300 mb-1">Categoria / Tipo</label>
-            <input type="text" id="formCat" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <div class="form-row">
+            <label for="formCat">Categoria / Tipo</label>
+            <input type="text" id="formCat" required class="control">
           </div>
-          <div>
-            <label class="block text-xs text-slate-300 mb-1">Prioridade Estoque</label>
-            <select id="formPrio" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <div class="form-row">
+            <label for="formPrio">Prioridade Estoque</label>
+            <select id="formPrio" class="control">
               <option value="Alta">Alta</option>
               <option value="Média">Média</option>
               <option value="Baixa">Baixa</option>
@@ -165,154 +923,371 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs text-slate-300 mb-1">Função Principal</label>
-          <textarea id="formFunc" rows="2" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"></textarea>
+        <div class="form-row">
+          <label for="formFunc">Função Principal</label>
+          <textarea id="formFunc" rows="2" class="control"></textarea>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-300 mb-1">Prevalência / Vida Útil</label>
-            <input type="text" id="formPrev" placeholder="Ex: 3 a 6 meses" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="formPrev">Prevalência / Vida Útil</label>
+            <input type="text" id="formPrev" placeholder="Ex: 3 a 6 meses" class="control">
           </div>
-          <div id="initialQtyContainer">
-            <label class="block text-xs text-slate-300 mb-1">Qtd Inicial de Estoque</label>
-            <input type="number" id="formQty" min="0" value="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+          <div class="form-row" id="initialQtyContainer">
+            <label for="formQty">Qtd Inicial de Estoque</label>
+            <input type="number" id="formQty" min="0" value="0" class="control">
           </div>
         </div>
 
-        <div id="tecnicoCadastroContainer">
-          <label class="block text-xs text-slate-300 mb-1">Técnico Responsável pelo Cadastro *</label>
-          <input type="text" id="formTecnico" placeholder="Nome do responsável" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white">
+        <div class="form-row" id="tecnicoCadastroContainer">
+          <label for="formTecnico">Técnico Responsável pelo Cadastro *</label>
+          <input type="text" id="formTecnico" placeholder="Nome do responsável" class="control">
         </div>
 
-        <div class="flex justify-end gap-3 pt-3 border-t border-slate-700">
-          <button type="button" onclick="closeModal('itemFormModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancelar</button>
-          <button type="submit" id="formSaveBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold">Salvar</button>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-soft" onclick="closeModal('itemFormModal')">Cancelar</button>
+          <button type="submit" id="formSaveBtn" class="btn btn-primary">Salvar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Lógica JavaScript da Aplicação -->
+  <!-- ============================ TOAST ============================ -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ============================ LÓGICA JAVASCRIPT ============================ -->
   <script>
+    /* ---------- estado global (mantido do original) ---------- */
     let API_URL = "";
     let rawInventoryData = [];
-    let currentFilteredData = []; // Armazena os dados filtrados atualmente na tela
+    let currentFilteredData = [];
+    let isDemoMode = false;
+    const THEME_KEY = 'labmedic-theme';
 
+    /* ---------- dados de demonstração (usados apenas quando não há API configurada) ---------- */
+    const DEMO_INVENTORY = [
+      { rowIndex: 2, equipamento: "Analisador Bioquímico", peca: "Lâmpada halógena 12V 20W", categoria: "Óptico", prioridade: "Alta", funcao: "Iluminação do fotômetro para leitura de absorbância", prevTroca: "6 meses", quantidade: 3 },
+      { rowIndex: 3, equipamento: "Analisador Hematológico", peca: "Reagente de lise (solução)", categoria: "Insumo / Reagente", prioridade: "Alta", funcao: "Lise dos eritrócitos para contagem diferencial", prevTroca: "1 a 3 meses", quantidade: 2 },
+      { rowIndex: 4, equipamento: "Analisador Hematológico", peca: "Tubo de aspiração (amostrador)", categoria: "Hidráulico / Consumível", prioridade: "Média", funcao: "Aspiração da amostra de sangue total", prevTroca: "3 a 6 meses", quantidade: 5 },
+      { rowIndex: 5, equipamento: "Centrífuga de Bancada", peca: "Escovas do motor elétrico", categoria: "Elétrico", prioridade: "Média", funcao: "Condução de corrente para acionamento do rotor", prevTroca: "12 meses", quantidade: 4 },
+      { rowIndex: 6, equipamento: "Centrífuga de Bancada", peca: "Rotor de ângulo fixo", categoria: "Mecânico", prioridade: "Baixa", funcao: "Acomodação dos tubos durante a centrifugação", prevTroca: "24 meses", quantidade: 1 },
+      { rowIndex: 7, equipamento: "Microscópio Binocular", peca: "Lâmpada LED do iluminador", categoria: "Óptico", prioridade: "Média", funcao: "Iluminação do campo de leitura das lâminas", prevTroca: "12 meses", quantidade: 2 },
+      { rowIndex: 8, equipamento: "Espectrofotômetro", peca: "Cubeta de quartzo", categoria: "Óptico / Consumível", prioridade: "Alta", funcao: "Leitura de absorbância das amostras", prevTroca: "6 meses", quantidade: 6 },
+      { rowIndex: 9, equipamento: "Sistema de Purificação de Água", peca: "Cartucho de osmose reversa", categoria: "Filtro", prioridade: "Alta", funcao: "Purificação da água reagente de grau analítico", prevTroca: "6 a 12 meses", quantidade: 2 },
+      { rowIndex: 10, equipamento: "Banho-Maria / Termostato", peca: "Termostato de controle de temperatura", categoria: "Elétrico", prioridade: "Média", funcao: "Manutenção da temperatura estável de incubação", prevTroca: "18 meses", quantidade: 3 },
+      { rowIndex: 11, equipamento: "Analisador Bioquímico", peca: "Agulha de amostragem / dispensação", categoria: "Hidráulico", prioridade: "Baixa", funcao: "Coleta e dispensação precisa de reagentes", prevTroca: "6 meses", quantidade: 8 }
+    ];
+
+    /* ==================== TEMA CLARO / ESCURO ==================== */
+    function currentTheme() {
+      return document.documentElement.getAttribute('data-theme') || 'light';
+    }
+
+    function toggleTheme() {
+      const next = currentTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      syncThemeIcon();
+    }
+
+    function syncThemeIcon() {
+      const icon = document.getElementById('themeIcon');
+      const btn = document.getElementById('themeToggle');
+      if (!icon) return;
+      const dark = currentTheme() === 'dark';
+      icon.className = dark ? 'ph ph-sun' : 'ph ph-moon';
+      if (btn) btn.title = dark ? 'Mudar para tema claro' : 'Mudar para tema escuro';
+    }
+
+    /* ==================== NAVEGAÇÃO ENTRE VIEWS ==================== */
+    const HEADER_ACTION_IDS = ['btnExport', 'btnSync', 'btnNew'];
+
+    function showView(name) {
+      const home = document.getElementById('homeView');
+      const dash = document.getElementById('dashboardView');
+      const isDash = name === 'dashboard';
+
+      home.classList.toggle('hidden', isDash);
+      dash.classList.toggle('hidden', !isDash);
+      HEADER_ACTION_IDS.forEach(id => document.getElementById(id).classList.toggle('hidden', !isDash));
+
+      if (isDash && rawInventoryData.length === 0 && currentFilteredData.length === 0) {
+        fetchData();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goHome() { showView('home'); }
+    function showDashboard() { showView('dashboard'); }
+    function scrollToFeatures() {
+      const el = document.getElementById('features');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ==================== CARROSSEL ==================== */
+    let slideIndex = 0;
+    let slideTimer = null;
+
+    function initCarousel() {
+      const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+      const dotsWrap = document.getElementById('carouselDots');
+      const carousel = document.getElementById('carousel');
+      if (!slides.length || !dotsWrap) return;
+
+      dotsWrap.innerHTML = '';
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Ir para a imagem ' + (i + 1));
+        dot.onclick = () => goToSlide(i);
+        dotsWrap.appendChild(dot);
+      });
+
+      startAutoSlide();
+
+      if (carousel) {
+        carousel.addEventListener('mouseenter', stopAutoSlide);
+        carousel.addEventListener('mouseleave', startAutoSlide);
+        let touchStartX = 0;
+        carousel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        carousel.addEventListener('touchend', e => {
+          const diff = e.changedTouches[0].clientX - touchStartX;
+          if (Math.abs(diff) > 45) moveSlide(diff < 0 ? 1 : -1);
+        }, { passive: true });
+      }
+    }
+
+    function goToSlide(index) {
+      const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+      const dots = Array.from(document.querySelectorAll('.carousel-dot'));
+      if (!slides.length) return;
+      slideIndex = (index + slides.length) % slides.length;
+      slides.forEach((s, i) => s.classList.toggle('active', i === slideIndex));
+      dots.forEach((d, i) => d.classList.toggle('active', i === slideIndex));
+    }
+
+    function moveSlide(step) { goToSlide(slideIndex + step); startAutoSlide(); }
+    function startAutoSlide() { stopAutoSlide(); slideTimer = setInterval(() => goToSlide(slideIndex + 1), 6000); }
+    function stopAutoSlide() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } }
+
+    /* ==================== TOAST ==================== */
+    function showToast(message, kind) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = message;
+      t.className = 'show' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : '');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => { t.className = ''; }, 3600);
+    }
+
+    function showStatus(html, kind) {
+      const box = document.getElementById('statusBox');
+      if (!box) return;
+      if (!html) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      const icon = kind === 'err' ? 'ph-warning-circle' : 'ph-info';
+      box.innerHTML = `<i class="ph ${icon}"></i><div>${html}</div>`;
+      box.classList.remove('hidden');
+    }
+
+    /* ==================== CARREGAMENTO DE DADOS ==================== */
     async function init() {
+      syncThemeIcon();
+      initCarousel();
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); }
+      });
+
       try {
         const configRes = await fetch('/api/config');
         if (configRes.ok) {
           const config = await configRes.json();
-          API_URL = config.apiUrl;
+          API_URL = config.apiUrl || '';
         }
       } catch (e) {
         console.warn("Sem endpoint /api/config. Certifique-se de configurar a API_URL.");
       }
-      fetchData();
+
+      /* Permite abrir direto no painel via ?view=dashboard */
+      let startView = 'home';
+      try {
+        const p = new URLSearchParams(window.location.search).get('view');
+        if (p === 'dashboard') startView = 'dashboard';
+      } catch (e) {}
+
+      if (startView === 'dashboard') {
+        showView('dashboard');
+      } else {
+        showView('home');
+        fetchData(true);
+      }
     }
 
-    async function fetchData() {
+    async function fetchData(silent) {
+      const loading = document.getElementById('loading');
+      const table = document.getElementById('tableContainer');
+      const refreshIcon = document.getElementById('refresh-icon');
+
       if (!API_URL) {
-        alert("URL do Google Apps Script não configurada!");
+        loadDemoData('A URL da API (Google Apps Script) não está configurada. Exibindo dados de demonstração para visualização da interface.');
+        if (!silent) showToast('Demonstração: nenhuma API configurada.', 'err');
         return;
       }
 
-      document.getElementById('loading').classList.remove('hidden');
-      document.getElementById('tableContainer').classList.add('hidden');
-      document.getElementById('refresh-icon').classList.add('animate-spin');
+      if (!silent) {
+        loading.classList.remove('hidden');
+        table.classList.add('hidden');
+        if (refreshIcon) refreshIcon.classList.add('spin');
+      }
 
       try {
         const res = await fetch(API_URL);
-        rawInventoryData = await res.json();
+        const data = await res.json();
+        rawInventoryData = (Array.isArray(data) ? data : []).map(normalizeItem);
+        isDemoMode = false;
+        showStatus('');
         populateEquipFilter();
         applyFilters();
       } catch (err) {
-        alert("Erro ao carregar os dados do Google Sheets.");
+        loadDemoData('Não foi possível carregar os dados da planilha. Verifique a conexão e a API_URL. Exibindo dados de demonstração.');
+        if (!silent) showToast('Erro ao carregar os dados do Google Sheets.', 'err');
       } finally {
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('tableContainer').classList.remove('hidden');
-        document.getElementById('refresh-icon').classList.remove('animate-spin');
+        loading.classList.add('hidden');
+        table.classList.remove('hidden');
+        if (refreshIcon) refreshIcon.classList.remove('spin');
       }
+    }
+
+    function normalizeItem(item, i) {
+      const s = v => (v === null || v === undefined) ? '' : String(v);
+      return {
+        rowIndex: item.rowIndex !== undefined && item.rowIndex !== null ? item.rowIndex : (i + 2),
+        equipamento: s(item.equipamento),
+        peca: s(item.peca),
+        categoria: s(item.categoria),
+        prioridade: s(item.prioridade) || 'Baixa',
+        funcao: s(item.funcao),
+        prevTroca: s(item.prevTroca),
+        quantidade: parseInt(item.quantidade) || 0
+      };
+    }
+
+    function loadDemoData(message) {
+      isDemoMode = true;
+      rawInventoryData = DEMO_INVENTORY.map(normalizeItem);
+      showStatus(`<strong>Modo demonstração.</strong> ${message}`, 'warn');
+      populateEquipFilter();
+      applyFilters();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('tableContainer').classList.remove('hidden');
     }
 
     function populateEquipFilter() {
       const select = document.getElementById('equipFilter');
+      const previous = select.value;
       const uniqueEquips = [...new Set(rawInventoryData.map(i => i.equipamento))].filter(Boolean).sort();
       select.innerHTML = '<option value="">Todos os Equipamentos</option>';
-      uniqueEquips.forEach(eq => { select.innerHTML += `<option value="${eq}">${eq}</option>`; });
+      uniqueEquips.forEach(eq => {
+        const opt = document.createElement('option');
+        opt.value = eq;
+        opt.textContent = eq;
+        select.appendChild(opt);
+      });
+      if (previous && uniqueEquips.includes(previous)) select.value = previous;
     }
 
+    /* ==================== FILTROS ==================== */
     function applyFilters() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
+      const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const equip = document.getElementById('equipFilter').value;
       const prio = document.getElementById('prioFilter').value;
 
       currentFilteredData = rawInventoryData.filter(item => {
-        const matchSearch = item.peca.toLowerCase().includes(search) || 
-                            item.funcao.toLowerCase().includes(search) || 
-                            item.categoria.toLowerCase().includes(search);
+        const matchSearch = !search ||
+          item.peca.toLowerCase().includes(search) ||
+          item.funcao.toLowerCase().includes(search) ||
+          item.categoria.toLowerCase().includes(search) ||
+          item.equipamento.toLowerCase().includes(search);
         const matchEquip = !equip || item.equipamento === equip;
         const matchPrio = !prio || item.prioridade === prio;
         return matchSearch && matchEquip && matchPrio;
       });
 
+      renderFilterHint(search, equip, prio);
       renderTable(currentFilteredData);
     }
 
+    function renderFilterHint(search, equip, prio) {
+      const hint = document.getElementById('filterHint');
+      const count = document.getElementById('resultsCount');
+      if (count) count.textContent = `${currentFilteredData.length} de ${rawInventoryData.length} itens`;
+      if (!hint) return;
+      const chips = [];
+      if (search) chips.push(`<span class="chip"><i class="ph ph-magnifying-glass"></i> ${escapeHtml(search)}</span>`);
+      if (equip) chips.push(`<span class="chip"><i class="ph ph-flask"></i> ${escapeHtml(equip)}</span>`);
+      if (prio) chips.push(`<span class="chip"><i class="ph ph-flag"></i> ${escapeHtml(prio)}</span>`);
+      hint.innerHTML = chips.length
+        ? `<span>Filtros ativos:</span> ${chips.join('')} <span>— ${currentFilteredData.length} item(ns) encontrado(s).</span>`
+        : `<span>Exibindo todos os ${rawInventoryData.length} itens cadastrados.</span>`;
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('equipFilter').value = '';
+      document.getElementById('prioFilter').value = '';
+      applyFilters();
+      showToast('Filtros limpos com sucesso.', 'ok');
+    }
+
+    function escapeHtml(value) {
+      return String(value === null || value === undefined ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    /* ==================== TABELA ==================== */
     function renderTable(items) {
       const tbody = document.getElementById('inventoryBody');
-      tbody.innerHTML = "";
+      tbody.innerHTML = '';
 
-      if(items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum item encontrado com os filtros aplicados.</td></tr>`;
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:38px 16px;text-align:center;color:var(--text-dim);">
+          <i class="ph ph-magnifying-glass-minus" style="font-size:1.7rem;display:block;margin-bottom:6px;"></i>
+          Nenhum item encontrado com os filtros aplicados.</td></tr>`;
         return;
       }
 
-      items.forEach(item => {
-        const prioBadge = item.prioridade === 'Alta' 
-          ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-          : item.prioridade === 'Média' 
-          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      const badgeClass = p => p === 'Alta' ? 'badge badge-alta' : p === 'Média' ? 'badge badge-media' : 'badge badge-baixa';
 
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-700/30 transition">
-            <td class="p-4 font-semibold text-white">${item.equipamento}</td>
-            <td class="p-4">
-              <div class="font-medium text-slate-200">${item.peca}</div>
-              <div class="text-xs text-slate-400">${item.funcao}</div>
-            </td>
-            <td class="p-4 text-slate-400 text-xs">${item.categoria}</td>
-            <td class="p-4 text-center">
-              <span class="px-2.5 py-1 text-xs border rounded-full font-medium ${prioBadge}">${item.prioridade}</span>
-            </td>
-            <td class="p-4 text-center font-mono font-bold text-base text-white" id="qty-${item.rowIndex}">
-              ${item.quantidade}
-            </td>
-            <td class="p-4 text-center">
-              <select onchange="handleActionSelect(this, ${item.rowIndex})" class="bg-slate-900 text-xs font-semibold text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer">
-                <option value="" selected disabled>Opções ⚙️</option>
-                <option value="entrada" class="text-emerald-400 font-bold">➕ Dar Entrada</option>
-                <option value="saida" class="text-red-400 font-bold">➖ Dar Baixa (Saída)</option>
-                <option value="editar" class="text-blue-400">✏️ Editar Cadastro</option>
-              </select>
-            </td>
-          </tr>
-        `;
-      });
+      tbody.innerHTML = items.map(item => `
+        <tr>
+          <td class="cell-strong">${escapeHtml(item.equipamento)}</td>
+          <td>
+            <div class="cell-strong">${escapeHtml(item.peca)}</div>
+            <div class="cell-sub">${escapeHtml(item.funcao)}</div>
+          </td>
+          <td><span class="cell-sub">${escapeHtml(item.categoria)}</span></td>
+          <td class="center"><span class="${badgeClass(item.prioridade)}">${escapeHtml(item.prioridade)}</span></td>
+          <td class="qty-cell" id="qty-${item.rowIndex}">${item.quantidade}</td>
+          <td class="center">
+            <select class="action-select" onchange="handleActionSelect(this, ${item.rowIndex})">
+              <option value="" selected disabled>Opções ⚙️</option>
+              <option value="entrada">➕ Dar Entrada</option>
+              <option value="saida">➖ Dar Baixa (Saída)</option>
+              <option value="editar">✏️ Editar Cadastro</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
     }
 
-    // GERAÇÃO DO RELATÓRIO PDF (FORMATO A4 PAISAGEM / HORIZONTAL)
+    /* ==================== RELATÓRIO PDF (A4 HORIZONTAL) ==================== */
     function exportToPDF() {
       if (!currentFilteredData || currentFilteredData.length === 0) {
-        alert("Não há dados visíveis para exportar em PDF.");
+        showToast('Não há dados visíveis para exportar em PDF.', 'err');
         return;
       }
 
       const { jsPDF } = window.jspdf;
-      // Inicializa documento A4 na orientação Paisagem (Landscape)
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
       const today = new Date().toLocaleString('pt-BR');
@@ -320,31 +1295,27 @@
       const totalUnidades = currentFilteredData.reduce((acc, curr) => acc + (parseInt(curr.quantidade) || 0), 0);
       const altaPrioridade = currentFilteredData.filter(i => i.prioridade === 'Alta').length;
 
-      // 1. Cabeçalho Corporativo
-      doc.setFillColor(27, 54, 93); // Azul Marinho Executive (#1B365D)
+      doc.setFillColor(27, 54, 93);
       doc.rect(0, 0, 297, 24, 'F');
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.setTextColor(255, 255, 255);
-      doc.text("Relatório de Controle de Estoque - Análises Clínicas", 14, 13);
+      doc.text("GRUPO LABMEDIC - Relatório de peças no estoque", 14, 13);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(200, 215, 235);
       doc.text(`Gerado em: ${today}`, 220, 13);
 
-      // Subtítulo e Filtros Aplicados
       doc.setFontSize(10);
       doc.setTextColor(60, 60, 60);
-      
+
       const searchVal = document.getElementById('searchInput').value || 'Nenhum';
       const equipVal = document.getElementById('equipFilter').value || 'Todos';
       const prioVal = document.getElementById('prioFilter').value || 'Todas';
       doc.text(`Filtros Ativos -> Equipamento: [${equipVal}] | Prioridade: [${prioVal}] | Busca: [${searchVal}]`, 14, 32);
 
-      // 2. Cards com Resumo Executivo das Métricas
-      // Card 1: Total de Tipos de Peça
       doc.setFillColor(240, 244, 248);
       doc.roundedRect(14, 36, 85, 18, 2, 2, 'F');
       doc.setFontSize(8);
@@ -355,7 +1326,6 @@
       doc.setTextColor(27, 54, 93);
       doc.text(`${totalItens} itens`, 18, 50);
 
-      // Card 2: Unidades em Estoque
       doc.setFillColor(240, 244, 248);
       doc.roundedRect(106, 36, 85, 18, 2, 2, 'F');
       doc.setFontSize(8);
@@ -367,8 +1337,7 @@
       doc.setTextColor(27, 54, 93);
       doc.text(`${totalUnidades} unidades`, 110, 50);
 
-      // Card 3: Peças Críticas (Alta Prioridade)
-      doc.setFillColor(254, 242, 242); // Vermelho Claro
+      doc.setFillColor(254, 242, 242);
       doc.roundedRect(198, 36, 85, 18, 2, 2, 'F');
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
@@ -379,17 +1348,9 @@
       doc.setTextColor(185, 28, 28);
       doc.text(`${altaPrioridade} itens`, 202, 50);
 
-      // 3. Tabela de Registros com AutoTable
       const tableHeaders = [["Equipamento / Setor", "Peça / Insumo Crítico", "Categoria / Tipo", "Função Principal", "Vida Útil", "Prioridade", "Saldo"]];
-      
       const tableData = currentFilteredData.map(item => [
-        item.equipamento,
-        item.peca,
-        item.categoria,
-        item.funcao,
-        item.prevTroca,
-        item.prioridade,
-        item.quantidade
+        item.equipamento, item.peca, item.categoria, item.funcao, item.prevTroca, item.prioridade, item.quantidade
       ]);
 
       doc.autoTable({
@@ -397,41 +1358,26 @@
         head: tableHeaders,
         body: tableData,
         theme: 'striped',
-        headStyles: {
-          fillColor: [44, 62, 80],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 9,
-          halign: 'left'
-        },
-        bodyStyles: {
-          fontSize: 8.5,
-          textColor: [40, 40, 40]
-        },
+        headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9, halign: 'left' },
+        bodyStyles: { fontSize: 8.5, textColor: [40, 40, 40] },
         columnStyles: {
-          0: { cellWidth: 38 }, // Equipamento
-          1: { cellWidth: 50, fontStyle: 'bold' }, // Peça
-          2: { cellWidth: 35 }, // Categoria
-          3: { cellWidth: 80 }, // Função
-          4: { cellWidth: 32 }, // Vida Útil
-          5: { cellWidth: 22, halign: 'center' }, // Prioridade
-          6: { cellWidth: 12, halign: 'center', fontStyle: 'bold' }  // Saldo
+          0: { cellWidth: 38 },
+          1: { cellWidth: 50, fontStyle: 'bold' },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 80 },
+          4: { cellWidth: 32 },
+          5: { cellWidth: 22, halign: 'center' },
+          6: { cellWidth: 12, halign: 'center', fontStyle: 'bold' }
         },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        didParseCell: function(data) {
-          // Destaque para a coluna de prioridade
-          if (data.section === 'body' && data.column.index === 5) {
-            if (data.cell.raw === 'Alta') {
-              data.cell.styles.textColor = [185, 28, 28];
-              data.cell.styles.fontStyle = 'bold';
-            }
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        didParseCell: function (data) {
+          if (data.section === 'body' && data.column.index === 5 && data.cell.raw === 'Alta') {
+            data.cell.styles.textColor = [185, 28, 28];
+            data.cell.styles.fontStyle = 'bold';
           }
         },
         margin: { left: 14, right: 14 },
-        didDrawPage: function(data) {
-          // Rodapé em todas as páginas com numeração
+        didDrawPage: function () {
           const str = `Página ${doc.internal.getNumberOfPages()}`;
           doc.setFontSize(8);
           doc.setTextColor(150, 150, 150);
@@ -440,39 +1386,39 @@
         }
       });
 
-      // Baixa o arquivo PDF no computador
-      doc.save(`Relatorio_Estoque_Pecas_${new Date().toISOString().slice(0,10)}.pdf`);
+      doc.save(`Relatorio_Estoque_Pecas_${new Date().toISOString().slice(0, 10)}.pdf`);
+      showToast('Relatório PDF gerado.', 'ok');
     }
 
-    // Ações de Entrada / Saída
+    /* ==================== AÇÕES DE ENTRADA / SAÍDA ==================== */
     function handleActionSelect(selectElement, rowIndex) {
       const action = selectElement.value;
-      selectElement.value = "";
-
-      if (action === "entrada") openMovementModal(rowIndex, "Entrada");
-      else if (action === "saida") openMovementModal(rowIndex, "Saída");
-      else if (action === "editar") openEditModal(rowIndex);
+      selectElement.value = '';
+      if (action === 'entrada') openMovementModal(rowIndex, 'Entrada');
+      else if (action === 'saida') openMovementModal(rowIndex, 'Saída');
+      else if (action === 'editar') openEditModal(rowIndex);
     }
 
     function openMovementModal(rowIndex, tipo) {
       const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
-      if(!item) return;
+      if (!item) return;
 
       document.getElementById('movRowIndex').value = rowIndex;
       document.getElementById('movType').value = tipo;
       document.getElementById('movPecaName').innerText = `${item.peca} (${item.equipamento})`;
-      
-      const submitBtn = document.getElementById('movSubmitBtn');
-      if (tipo === "Entrada") {
-        document.getElementById('movModalTitle').innerText = "Dar Entrada no Estoque";
-        submitBtn.innerText = "Registrar Entrada";
-        submitBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white";
-      } else {
-        document.getElementById('movModalTitle').innerText = "Dar Baixa no Estoque (Saída)";
-        submitBtn.innerText = "Registrar Baixa";
-        submitBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-500 text-white";
-      }
+      document.getElementById('movQty').value = 1;
+      document.getElementById('movTecnico').value = '';
 
+      const submitBtn = document.getElementById('movSubmitBtn');
+      if (tipo === 'Entrada') {
+        document.getElementById('movModalTitle').innerText = 'Dar Entrada no Estoque';
+        submitBtn.innerText = 'Registrar Entrada';
+        submitBtn.className = 'btn btn-success';
+      } else {
+        document.getElementById('movModalTitle').innerText = 'Dar Baixa no Estoque (Saída)';
+        submitBtn.innerText = 'Registrar Baixa';
+        submitBtn.className = 'btn btn-danger';
+      }
       openModal('movementModal');
     }
 
@@ -482,35 +1428,35 @@
       const tipo = document.getElementById('movType').value;
       const qtyInput = parseInt(document.getElementById('movQty').value);
       const tecnico = document.getElementById('movTecnico').value;
-
-      const delta = tipo === "Entrada" ? qtyInput : -qtyInput;
+      const delta = tipo === 'Entrada' ? qtyInput : -qtyInput;
 
       closeModal('movementModal');
+
+      if (isDemoMode) {
+        const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
+        if (item) item.quantidade = Math.max(0, item.quantidade + delta);
+        applyFilters();
+        showToast(`Operação de ${tipo} registrada (demonstração).`, 'ok');
+        return;
+      }
 
       try {
         await fetch(API_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'stockMovement',
-            rowIndex: rowIndex,
-            quantidade: delta,
-            tipo: tipo,
-            tecnico: tecnico
-          })
+          body: JSON.stringify({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico })
         });
-
-        alert(`Operação de ${tipo} salva com sucesso!`);
+        showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
         setTimeout(fetchData, 1200);
       } catch (err) {
-        alert("Erro ao salvar operação.");
+        showToast('Erro ao salvar operação.', 'err');
       }
     }
 
     function openCreateModal() {
-      document.getElementById('formModalTitle').innerText = "Cadastrar Nova Peça";
-      document.getElementById('formMode').value = "create";
+      document.getElementById('formModalTitle').innerText = 'Cadastrar Nova Peça';
+      document.getElementById('formMode').value = 'create';
       document.getElementById('itemForm').reset();
       document.getElementById('initialQtyContainer').classList.remove('hidden');
       document.getElementById('tecnicoCadastroContainer').classList.remove('hidden');
@@ -519,10 +1465,10 @@
 
     function openEditModal(rowIndex) {
       const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
-      if(!item) return;
+      if (!item) return;
 
-      document.getElementById('formModalTitle').innerText = "Editar Peça";
-      document.getElementById('formMode').value = "edit";
+      document.getElementById('formModalTitle').innerText = 'Editar Peça';
+      document.getElementById('formMode').value = 'edit';
       document.getElementById('formRowIndex').value = rowIndex;
 
       document.getElementById('formEquip').value = item.equipamento;
@@ -534,7 +1480,6 @@
 
       document.getElementById('initialQtyContainer').classList.add('hidden');
       document.getElementById('tecnicoCadastroContainer').classList.add('hidden');
-
       openModal('itemFormModal');
     }
 
@@ -556,12 +1501,27 @@
       };
 
       const payload = {
-        action: mode === "create" ? "addItem" : "editItem",
+        action: mode === 'create' ? 'addItem' : 'editItem',
         rowIndex: parseInt(document.getElementById('formRowIndex').value) || null,
         item: itemPayload
       };
 
       closeModal('itemFormModal');
+
+      if (isDemoMode) {
+        if (mode === 'create') {
+          const nextIndex = rawInventoryData.reduce((m, i) => Math.max(m, i.rowIndex), 1) + 1;
+          rawInventoryData.push(normalizeItem({ ...itemPayload, rowIndex: nextIndex }));
+        } else {
+          const target = rawInventoryData.find(i => i.rowIndex === payload.rowIndex);
+          if (target) Object.assign(target, normalizeItem({ ...itemPayload, rowIndex: target.rowIndex }));
+        }
+        populateEquipFilter();
+        applyFilters();
+        btn.disabled = false;
+        showToast('Registro salvo (demonstração).', 'ok');
+        return;
+      }
 
       try {
         await fetch(API_URL, {
@@ -570,20 +1530,28 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        alert("Registro salvo com sucesso!");
+        showToast('Registro salvo com sucesso!', 'ok');
         setTimeout(fetchData, 1200);
-      } catch(err) {
-        alert("Erro ao salvar.");
+      } catch (err) {
+        showToast('Erro ao salvar.', 'err');
       } finally {
         btn.disabled = false;
       }
     }
 
+    /* ==================== UTILITÁRIOS DE MODAL ==================== */
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden');
+      const btn = document.getElementById('formSaveBtn');
+      if (id === 'itemFormModal' && btn) btn.disabled = false;
+      if (id === 'itemFormModal') {
+        const saveBtn = document.getElementById('movSubmitBtn');
+        if (saveBtn) saveBtn.className = 'btn btn-primary';
+      }
+    }
 
     window.onload = init;
   </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
