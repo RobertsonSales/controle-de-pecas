@@ -681,6 +681,13 @@
     .ac-item mark { background: rgba(250,204,21,.45); color: inherit; border-radius: 2px; }
     .ac-empty { padding: 8px 12px; font-size: .8rem; color: var(--text-dim, #7a8796); }
     .exit-only.hidden { display: none; }
+    .cat-filter { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+    .cat-filter label { display: inline-flex; gap: 6px; align-items: center; font-size: .82rem; font-weight: 500; color: var(--text); cursor: pointer; }
+    .cat-hint { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+    .modal-card.pdf-card { max-width: 920px; display: flex; flex-direction: column; }
+    .pdf-frame { width: 100%; height: min(70vh, 720px); border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+    .pdf-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .pdf-note { font-size: .74rem; color: var(--text-muted); margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -892,6 +899,15 @@
             <input type="text" id="movUnidade" autocomplete="off" placeholder="Digite para buscar a unidade..." class="control">
             <div class="ac-list hidden" id="acUnidade"></div>
           </div>
+          <div class="form-row" style="margin-bottom:8px">
+            <label>Exibir também na lista de equipamentos</label>
+            <div class="cat-filter">
+              <label><input type="checkbox" id="catAuxiliar" data-cat="auxiliar"> Auxiliar</label>
+              <label><input type="checkbox" id="catPeriferico" data-cat="periferico"> Periférico</label>
+              <label><input type="checkbox" id="catImpressora" data-cat="impressora"> Impressora</label>
+            </div>
+            <div class="cat-hint" id="catHint"></div>
+          </div>
           <div class="form-row ac-wrap">
             <label for="movEquipDestino">Equipamento na Unidade *</label>
             <input type="text" id="movEquipDestino" autocomplete="off" placeholder="Digite para buscar o equipamento..." class="control">
@@ -916,6 +932,24 @@
           <button type="submit" id="movSubmitBtn" class="btn btn-primary">Registrar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ============================ MODAL: PRÉ-VISUALIZAÇÃO DO PDF ============================ -->
+  <div id="pdfPreviewModal" class="modal hidden">
+    <div class="modal-card pdf-card">
+      <div class="modal-head">
+        <h3>Pré-visualização do Comprovante de Saída</h3>
+        <button class="modal-close" onclick="closeModal('pdfPreviewModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
+      </div>
+      <iframe id="pdfFrame" class="pdf-frame" title="Comprovante de saída (PDF)"></iframe>
+      <div class="pdf-note">Se a visualização não aparecer neste dispositivo, use "Abrir em nova aba".</div>
+      <div class="pdf-actions">
+        <button type="button" class="btn btn-soft" onclick="closeModal('pdfPreviewModal')">Fechar</button>
+        <a id="pdfOpenTab" class="btn btn-soft" target="_blank" rel="noopener">Abrir em nova aba</a>
+        <button type="button" class="btn btn-soft" onclick="printPdfPreview()"><i class="ph ph-printer"></i> Imprimir</button>
+        <button type="button" class="btn btn-primary" onclick="downloadPdfPreview()"><i class="ph ph-download-simple"></i> Baixar PDF</button>
+      </div>
     </div>
   </div>
 
@@ -1136,7 +1170,7 @@
       syncThemeIcon();
       initCarousel();
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); }
+        if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); closeModal('pdfPreviewModal'); }
       });
 
       try {
@@ -1454,6 +1488,8 @@
       document.getElementById('movQty').value = 1;
       document.getElementById('movTecnico').value = '';
       ['movUnidade','movEquipDestino','movSerieDestino'].forEach(id => document.getElementById(id).value = '');
+      document.querySelectorAll('.cat-filter input[data-cat]').forEach(c => c.checked = false);
+      document.getElementById('catHint').textContent = '';
       document.getElementById('exitFields').classList.toggle('hidden', tipo !== 'Saída');
       if (tipo === 'Saída') loadUnidades();
 
@@ -1518,8 +1554,10 @@
     /* ==================== UNIDADES / EQUIPAMENTOS (BUSCA INTELIGENTE) ==================== */
     let unidadesData = null; // [{unidade, equipamento, serie, setor}]
     const DEMO_UNIDADES = [
-      { unidade: 'Unidade Centro', equipamento: 'Bioquímica - Analisador A', serie: 'BQ-1001', setor: 'Laboratório' },
-      { unidade: 'Unidade Centro', equipamento: 'Hematologia - Contador H', serie: 'HM-2002', setor: 'Laboratório' },
+      { unidade: 'Unidade Centro', equipamento: 'Bioquímica - Analisador A', serie: 'BQ-1001', setor: 'Laboratório', categoria: 'Equipamento' },
+      { unidade: 'Unidade Centro', equipamento: 'Hematologia - Contador H', serie: 'HM-2002', setor: 'Laboratório', categoria: 'Equipamento' },
+      { unidade: 'Unidade Centro', equipamento: 'Impressora de etiquetas', serie: 'IM-0001', setor: 'Laboratório', categoria: 'Impressora' },
+      { unidade: 'Unidade Centro', equipamento: 'Nobreak do analisador', serie: 'AX-0002', setor: 'Laboratório', categoria: 'Auxiliar' },
       { unidade: 'Unidade Norte', equipamento: 'Coagulação - Coagulômetro C', serie: 'CG-3003', setor: 'Laboratório' }
     ];
 
@@ -1528,7 +1566,8 @@
       unidade:     ['unidade', 'unidadedesaude', 'unidadedestino', 'lotacao', 'local'],
       equipamento: ['equipamento', 'descricaodoequipamento', 'descricaodobem', 'descricao', 'bem', 'item'],
       serie:       ['nseriepatrimonio', 'nserie', 'ndeserie', 'nodeserie', 'numerodeserie', 'serie', 'ndepatrimonio', 'nodepatrimonio', 'npatrimonio', 'numerodopatrimonio', 'patrimonio', 'tombamento', 'placa'],
-      setor:       ['setor', 'departamento', 'localizacao', 'sala']
+      setor:       ['setor', 'departamento', 'localizacao', 'sala'],
+      categoria:   ['categoria', 'tipodeequipamento', 'tipo', 'classificacao', 'classe', 'grupo']
     };
     const keyOf = t => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -1556,7 +1595,7 @@
           if (!map.unidade) throw new Error('não encontrei a coluna "Unidade" (colunas recebidas: ' + keys.join(', ') + ')');
         }
         const g = f => map[f] && r[map[f]] != null ? String(r[map[f]]).trim() : '';
-        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: g('serie'), setor: g('setor') });
+        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: g('serie'), setor: g('setor'), categoria: g('categoria') });
       });
       return out.filter(u => u.unidade);
     }
@@ -1643,17 +1682,39 @@
       input.addEventListener('blur', () => setTimeout(() => list.classList.add('hidden'), 120));
     }
 
+    /* ---- Filtro por categoria (Auxiliar / Periférico / Impressora) — desmarcados por padrão ---- */
+    function categoriasOcultas() {
+      return Array.from(document.querySelectorAll('.cat-filter input[data-cat]'))
+        .filter(c => !c.checked).map(c => c.dataset.cat);
+    }
+    // Usa a coluna de categoria; se a planilha não tiver nenhuma, usa o nome do equipamento como alternativa
+    function equipamentoOculto(u, ocultas) {
+      const temCat = (unidadesData || []).some(x => x.categoria);
+      const texto = normTxt(temCat ? u.categoria : u.equipamento);
+      return !!texto && ocultas.some(c => texto.includes(c));
+    }
+    function atualizarCatHint() {
+      const el = document.getElementById('catHint'); if (!el) return;
+      const un = normTxt(document.getElementById('movUnidade').value), oc = categoriasOcultas();
+      const n = (unidadesData || []).filter(u => u.equipamento && (!un || normTxt(u.unidade) === un) && equipamentoOculto(u, oc)).length;
+      el.textContent = n ? `${n} item(ns) oculto(s) na lista — marque a categoria para exibi-los.` : '';
+    }
+
     function initExitAutocomplete() {
+      document.querySelectorAll('.cat-filter input[data-cat]').forEach(c => c.addEventListener('change', atualizarCatHint));
+      document.getElementById('movUnidade').addEventListener('input', atualizarCatHint);
       setupAutocomplete('movUnidade', 'acUnidade', () => {
         const map = {};
-        (unidadesData || []).forEach(u => { map[u.unidade] = (map[u.unidade] || 0) + (u.equipamento ? 1 : 0); });
+        const oc = categoriasOcultas();
+        (unidadesData || []).forEach(u => { map[u.unidade] = (map[u.unidade] || 0) + (u.equipamento && !equipamentoOculto(u, oc) ? 1 : 0); });
         return Object.keys(map).map(k => ({ label: k, sub: `${map[k]} equipamento(s) lotado(s)` }));
       }, () => { document.getElementById('movEquipDestino').value = ''; document.getElementById('movSerieDestino').value = ''; document.getElementById('movEquipDestino').focus(); });
 
       setupAutocomplete('movEquipDestino', 'acEquip', () => {
-        const un = normTxt(document.getElementById('movUnidade').value);
+        const un = normTxt(document.getElementById('movUnidade').value), oc = categoriasOcultas();
+        atualizarCatHint();
         return (unidadesData || [])
-          .filter(u => u.equipamento && (!un || normTxt(u.unidade) === un))
+          .filter(u => u.equipamento && (!un || normTxt(u.unidade) === un) && !equipamentoOculto(u, oc))
           .map(u => ({ label: u.equipamento, sub: [u.serie && `Série/Patrimônio: ${u.serie}`, u.setor, !un && u.unidade].filter(Boolean).join(' · '), data: u }));
       }, o => {
         document.getElementById('movSerieDestino').value = o.data.serie || '';
@@ -1705,7 +1766,29 @@
       doc.setFontSize(8); doc.setTextColor(150, 150, 150);
       doc.text('Sistema de Gestão de Estoque - Hospitalar & Laboratorial', 14, 287);
 
-      doc.save(`Comprovante_Saida_${(it.peca || 'peca').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`);
+      showPdfPreview(doc, `Comprovante_Saida_${(it.peca || 'peca').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`);
+    }
+
+    /* ---- Pré-visualização do PDF antes de baixar ---- */
+    let pdfPreviewUrl = null, pdfPreviewName = 'comprovante.pdf';
+    function showPdfPreview(doc, filename) {
+      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
+      pdfPreviewUrl = URL.createObjectURL(doc.output('blob'));
+      pdfPreviewName = filename;
+      document.getElementById('pdfFrame').src = pdfPreviewUrl;
+      document.getElementById('pdfOpenTab').href = pdfPreviewUrl;
+      openModal('pdfPreviewModal');
+    }
+    function downloadPdfPreview() {
+      if (!pdfPreviewUrl) return;
+      const a = document.createElement('a');
+      a.href = pdfPreviewUrl; a.download = pdfPreviewName;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    function printPdfPreview() {
+      const f = document.getElementById('pdfFrame');
+      try { f.contentWindow.focus(); f.contentWindow.print(); }
+      catch (e) { window.open(pdfPreviewUrl, '_blank'); }
     }
 
     function openCreateModal() {
@@ -1798,6 +1881,10 @@
     /* ==================== UTILITÁRIOS DE MODAL ==================== */
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden');
+      if (id === 'pdfPreviewModal' && pdfPreviewUrl) {
+        document.getElementById('pdfFrame').src = 'about:blank';
+        URL.revokeObjectURL(pdfPreviewUrl); pdfPreviewUrl = null;
+      }
       const btn = document.getElementById('formSaveBtn');
       if (id === 'itemFormModal' && btn) btn.disabled = false;
       if (id === 'itemFormModal') {
