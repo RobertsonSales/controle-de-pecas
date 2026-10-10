@@ -671,6 +671,16 @@
       table.inventory thead th, table.inventory tbody td { padding: 11px 10px; }
       .view-bar { gap: 8px; }
     }
+    /* Busca inteligente (autocomplete) */
+    .ac-wrap { position: relative; }
+    .ac-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 60; margin-top: 4px; max-height: 220px; overflow-y: auto;
+      background: var(--surface, #fff); border: 1px solid var(--border, #d6dde6); border-radius: 10px; box-shadow: 0 10px 28px rgba(15,30,60,.18); }
+    .ac-item { padding: 8px 12px; cursor: pointer; font-size: .86rem; line-height: 1.25; }
+    .ac-item small { display: block; color: var(--text-dim, #7a8796); font-size: .74rem; }
+    .ac-item.active, .ac-item:hover { background: rgba(27,54,93,.08); }
+    .ac-item mark { background: rgba(250,204,21,.45); color: inherit; border-radius: 2px; }
+    .ac-empty { padding: 8px 12px; font-size: .8rem; color: var(--text-dim, #7a8796); }
+    .exit-only.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -876,6 +886,26 @@
           <input type="number" id="movQty" min="1" value="1" required class="control">
         </div>
 
+        <div class="exit-only hidden" id="exitFields">
+          <div class="form-row ac-wrap">
+            <label for="movUnidade">Unidade de Destino *</label>
+            <input type="text" id="movUnidade" autocomplete="off" placeholder="Digite para buscar a unidade..." class="control">
+            <div class="ac-list hidden" id="acUnidade"></div>
+          </div>
+          <div class="form-row ac-wrap">
+            <label for="movEquipDestino">Equipamento na Unidade *</label>
+            <input type="text" id="movEquipDestino" autocomplete="off" placeholder="Digite para buscar o equipamento..." class="control">
+            <div class="ac-list hidden" id="acEquip"></div>
+          </div>
+          <div class="form-row">
+            <label for="movSerieDestino">Nº de Série / Patrimônio</label>
+            <input type="text" id="movSerieDestino" placeholder="Preenchido automaticamente quando disponível" class="control">
+          </div>
+          <label style="display:flex;gap:8px;align-items:center;font-size:.8rem;margin-bottom:12px;color:var(--text-muted)">
+            <input type="checkbox" id="movGerarComprovante" checked> Gerar comprovante de saída (PDF)
+          </label>
+        </div>
+
         <div class="form-row">
           <label for="movTecnico">Técnico Responsável *</label>
           <input type="text" id="movTecnico" required placeholder="Nome do técnico de laboratório/engenheiro" class="control">
@@ -963,7 +993,14 @@
   <!-- ============================ LÓGICA JAVASCRIPT ============================ -->
   <script>
     /* ---------- estado global (mantido do original) ---------- */
-    let API_URL = "";
+    let API_URL = "https://script.google.com/macros/s/AKfycbzZ2HROxkLGvtZT0j6n8rhpkDlV_pzksgnf4J9SkfCOR8BJ0_huibEQRqzjjtnWj7L3ow/exec";
+    /* ---------- origem dos dados de Unidades / Equipamentos (API do app de Patrimônio) ---------- */
+    // "/api/patrimonio" é repassado ao outro app pelo vercel.json (rewrite) — sem CORS e sem token no navegador.
+    // Também aceita o endereço direto de um Apps Script (…/exec); nesse caso, preencha UNIDADES_TOKEN se exigido.
+    const UNIDADES_URL_RAW = "/api/patrimonio";
+    const UNIDADES_TOKEN = "";
+    // corrige automaticamente "/exec/exec" (ou "/exec/") para "/exec"
+    const UNIDADES_URL = String(UNIDADES_URL_RAW || '').trim().replace(/(\/exec)+\/?$/, '/exec');
     let rawInventoryData = [];
     let currentFilteredData = [];
     let isDemoMode = false;
@@ -1106,7 +1143,7 @@
         const configRes = await fetch('/api/config');
         if (configRes.ok) {
           const config = await configRes.json();
-          API_URL = config.apiUrl || '';
+          API_URL = config.apiUrl || API_URL;
         }
       } catch (e) {
         console.warn("Sem endpoint /api/config. Certifique-se de configurar a API_URL.");
@@ -1416,6 +1453,9 @@
       document.getElementById('movPecaName').innerText = `${item.peca} (${item.equipamento})`;
       document.getElementById('movQty').value = 1;
       document.getElementById('movTecnico').value = '';
+      ['movUnidade','movEquipDestino','movSerieDestino'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('exitFields').classList.toggle('hidden', tipo !== 'Saída');
+      if (tipo === 'Saída') loadUnidades();
 
       const submitBtn = document.getElementById('movSubmitBtn');
       if (tipo === 'Entrada') {
@@ -1437,6 +1477,17 @@
       const qtyInput = parseInt(document.getElementById('movQty').value);
       const tecnico = document.getElementById('movTecnico').value;
       const delta = tipo === 'Entrada' ? qtyInput : -qtyInput;
+      const unidade = document.getElementById('movUnidade').value.trim();
+      const equipDestino = document.getElementById('movEquipDestino').value.trim();
+      const serieDestino = document.getElementById('movSerieDestino').value.trim();
+      const movItem = rawInventoryData.find(i => i.rowIndex === rowIndex);
+
+      if (tipo === 'Saída') {
+        if (!unidade || !equipDestino) { showToast('Informe a unidade de destino e o equipamento.', 'err'); return; }
+        if (movItem && qtyInput > movItem.quantidade) { showToast(`Saldo insuficiente (disponível: ${movItem.quantidade}).`, 'err'); return; }
+      }
+      const gerarDoc = tipo === 'Saída' && document.getElementById('movGerarComprovante').checked;
+      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, dataHora: new Date().toLocaleString('pt-BR') };
 
       closeModal('movementModal');
 
@@ -1445,6 +1496,7 @@
         if (item) item.quantidade = Math.max(0, item.quantidade + delta);
         applyFilters();
         showToast(`Operação de ${tipo} registrada (demonstração).`, 'ok');
+        if (gerarDoc) gerarComprovanteSaida(docData);
         return;
       }
 
@@ -1453,13 +1505,207 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico })
+          body: JSON.stringify({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino })
         });
         showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
+        if (gerarDoc) gerarComprovanteSaida(docData);
         setTimeout(fetchData, 1200);
       } catch (err) {
         showToast('Erro ao salvar operação.', 'err');
       }
+    }
+
+    /* ==================== UNIDADES / EQUIPAMENTOS (BUSCA INTELIGENTE) ==================== */
+    let unidadesData = null; // [{unidade, equipamento, serie, setor}]
+    const DEMO_UNIDADES = [
+      { unidade: 'Unidade Centro', equipamento: 'Bioquímica - Analisador A', serie: 'BQ-1001', setor: 'Laboratório' },
+      { unidade: 'Unidade Centro', equipamento: 'Hematologia - Contador H', serie: 'HM-2002', setor: 'Laboratório' },
+      { unidade: 'Unidade Norte', equipamento: 'Coagulação - Coagulômetro C', serie: 'CG-3003', setor: 'Laboratório' }
+    ];
+
+    // Reconhece as colunas pelo nome do cabeçalho (sem acento/maiúscula), aceitando variações comuns
+    const UNID_ALIASES = {
+      unidade:     ['unidade', 'unidadedesaude', 'unidadedestino', 'lotacao', 'local'],
+      equipamento: ['equipamento', 'descricaodoequipamento', 'descricaodobem', 'descricao', 'bem', 'item'],
+      serie:       ['nseriepatrimonio', 'nserie', 'ndeserie', 'nodeserie', 'numerodeserie', 'serie', 'ndepatrimonio', 'nodepatrimonio', 'npatrimonio', 'numerodopatrimonio', 'patrimonio', 'tombamento', 'placa'],
+      setor:       ['setor', 'departamento', 'localizacao', 'sala']
+    };
+    const keyOf = t => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Aceita: [ {unidade,...} ]  |  {ok,data:[...]}  |  {ok,data:{headers,rows:[{...}]}}  |  {rows:[...]}
+    function parseUnidades(data) {
+      if (data && data.ok === false) throw new Error(data.error || 'a API recusou a requisição');
+      let rows = data;
+      if (rows && !Array.isArray(rows) && rows.data !== undefined) rows = rows.data;
+      if (rows && !Array.isArray(rows) && Array.isArray(rows.rows)) rows = rows.rows;
+      if (!Array.isArray(rows)) throw new Error('formato de resposta não reconhecido');
+      let map = null;
+      const out = [];
+      rows.forEach(r => {
+        if (!r || typeof r !== 'object') return;
+        if (!map) { // descobre uma vez qual chave de cada linha corresponde a cada campo
+          const keys = Object.keys(r), nk = keys.map(keyOf), used = {};
+          map = {};
+          [true, false].forEach(exact => Object.keys(UNID_ALIASES).forEach(f => {
+            if (map[f]) return;
+            for (const al of UNID_ALIASES[f]) {
+              const i = nk.findIndex((k, j) => !used[j] && k && (exact ? k === al : k.indexOf(al) === 0));
+              if (i >= 0) { map[f] = keys[i]; used[i] = true; return; }
+            }
+          }));
+          if (!map.unidade) throw new Error('não encontrei a coluna "Unidade" (colunas recebidas: ' + keys.join(', ') + ')');
+        }
+        const g = f => map[f] && r[map[f]] != null ? String(r[map[f]]).trim() : '';
+        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: g('serie'), setor: g('setor') });
+      });
+      return out.filter(u => u.unidade);
+    }
+
+    let unidadesErrAt = 0;
+    async function loadUnidades(force) {
+      if (unidadesData && unidadesData.length && !force) return;
+      if (unidadesData && !unidadesData.length && !force && Date.now() - unidadesErrAt < 15000) return; // evita repetir erro a cada clique
+      if (!UNIDADES_URL) { unidadesData = DEMO_UNIDADES; return; }
+      try {
+        const u = new URL(UNIDADES_URL, window.location.href);
+        if (/script\.google\.com$/.test(u.hostname)) u.searchParams.set('action', 'unidades');
+        if (UNIDADES_TOKEN) u.searchParams.set('token', UNIDADES_TOKEN);
+        const res = await fetch(u.toString());
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch (e) { throw new Error('a resposta não é JSON — confira se a implantação está com acesso "Qualquer pessoa"'); }
+        unidadesData = parseUnidades(data);
+        unidadesErrAt = Date.now();
+        if (!unidadesData.length) showToast('A planilha de unidades não retornou nenhuma linha.', 'err');
+      } catch (e) {
+        unidadesData = [];
+        unidadesErrAt = Date.now();
+        showToast('Não foi possível carregar as unidades: ' + (e.message || e), 'err');
+      }
+    }
+
+    function normTxt(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+
+    // Busca "inteligente": ignora acentos/maiúsculas, aceita palavras fora de ordem e prioriza início de palavra
+    function smartScore(text, query) {
+      const t = normTxt(text), terms = normTxt(query).split(/\s+/).filter(Boolean);
+      if (!terms.length) return 1;
+      let score = 0;
+      for (const term of terms) {
+        const idx = t.indexOf(term);
+        if (idx < 0) return 0;
+        score += idx === 0 ? 3 : (/\s|-|\//.test(t[idx - 1]) ? 2 : 1);
+      }
+      return score;
+    }
+
+    function highlight(text, query) {
+      let html = escapeHtml(text);
+      normTxt(query).split(/\s+/).filter(Boolean).forEach(term => {
+        const n = normTxt(text), i = n.indexOf(term);
+        if (i >= 0 && n.length === text.length) {
+          const orig = text.substr(i, term.length);
+          html = html.replace(escapeHtml(orig), `<mark>${escapeHtml(orig)}</mark>`);
+        }
+      });
+      return html;
+    }
+
+    function setupAutocomplete(inputId, listId, getOptions, onPick) {
+      const input = document.getElementById(inputId), list = document.getElementById(listId);
+      let active = -1, current = [];
+      const render = () => {
+        const q = input.value;
+        current = getOptions()
+          .map(o => ({ o, s: smartScore(o.label + ' ' + (o.sub || ''), q) }))
+          .filter(x => x.s > 0).sort((a, b) => b.s - a.s || a.o.label.localeCompare(b.o.label)).slice(0, 30).map(x => x.o);
+        active = -1;
+        list.innerHTML = current.length
+          ? current.map((o, i) => `<div class="ac-item" data-i="${i}">${highlight(o.label, q)}${o.sub ? `<small>${escapeHtml(o.sub)}</small>` : ''}</div>`).join('')
+          : `<div class="ac-empty">${unidadesData === null ? 'Carregando...' : 'Nenhum resultado. Você pode digitar livremente.'}</div>`;
+        list.classList.remove('hidden');
+      };
+      const pick = i => { const o = current[i]; if (!o) return; input.value = o.label; list.classList.add('hidden'); onPick && onPick(o); };
+      input.addEventListener('focus', async () => { render(); await loadUnidades(); if (document.activeElement === input) render(); });
+      input.addEventListener('input', render);
+      input.addEventListener('keydown', e => {
+        const items = list.querySelectorAll('.ac-item');
+        if (e.key === 'ArrowDown') { active = Math.min(active + 1, items.length - 1); e.preventDefault(); }
+        else if (e.key === 'ArrowUp') { active = Math.max(active - 1, 0); e.preventDefault(); }
+        else if (e.key === 'Enter' && active >= 0 && !list.classList.contains('hidden')) { e.preventDefault(); pick(active); return; }
+        else if (e.key === 'Escape') { list.classList.add('hidden'); e.stopPropagation(); return; }
+        else return;
+        items.forEach((el, i) => el.classList.toggle('active', i === active));
+        if (items[active]) items[active].scrollIntoView({ block: 'nearest' });
+      });
+      list.addEventListener('mousedown', e => { const el = e.target.closest('.ac-item'); if (el) { e.preventDefault(); pick(+el.dataset.i); } });
+      input.addEventListener('blur', () => setTimeout(() => list.classList.add('hidden'), 120));
+    }
+
+    function initExitAutocomplete() {
+      setupAutocomplete('movUnidade', 'acUnidade', () => {
+        const map = {};
+        (unidadesData || []).forEach(u => { map[u.unidade] = (map[u.unidade] || 0) + (u.equipamento ? 1 : 0); });
+        return Object.keys(map).map(k => ({ label: k, sub: `${map[k]} equipamento(s) lotado(s)` }));
+      }, () => { document.getElementById('movEquipDestino').value = ''; document.getElementById('movSerieDestino').value = ''; document.getElementById('movEquipDestino').focus(); });
+
+      setupAutocomplete('movEquipDestino', 'acEquip', () => {
+        const un = normTxt(document.getElementById('movUnidade').value);
+        return (unidadesData || [])
+          .filter(u => u.equipamento && (!un || normTxt(u.unidade) === un))
+          .map(u => ({ label: u.equipamento, sub: [u.serie && `Série/Patrimônio: ${u.serie}`, u.setor, !un && u.unidade].filter(Boolean).join(' · '), data: u }));
+      }, o => {
+        document.getElementById('movSerieDestino').value = o.data.serie || '';
+        if (!document.getElementById('movUnidade').value) document.getElementById('movUnidade').value = o.data.unidade;
+      });
+    }
+    document.addEventListener('DOMContentLoaded', initExitAutocomplete);
+
+    /* ==================== COMPROVANTE DE SAÍDA (PDF A4) ==================== */
+    function gerarComprovanteSaida(d) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const it = d.item || {};
+      const num = 'S' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
+
+      doc.setFillColor(27, 54, 93); doc.rect(0, 0, 210, 26, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(255, 255, 255);
+      doc.text('GRUPO LABMEDIC - Comprovante de Saída de Peça', 14, 12);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(200, 215, 235);
+      doc.text(`Nº ${num}   ·   Emitido em: ${d.dataHora}`, 14, 20);
+
+      const section = (title, rows, y) => {
+        doc.autoTable({
+          startY: y, head: [[{ content: title, colSpan: 2 }]], body: rows, theme: 'grid',
+          headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
+          bodyStyles: { fontSize: 9.5, textColor: [40, 40, 40] },
+          columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold', fillColor: [240, 244, 248] } },
+          margin: { left: 14, right: 14 }
+        });
+        return doc.lastAutoTable.finalY + 6;
+      };
+      let y = section('PEÇA / INSUMO', [
+        ['Peça', it.peca || ''], ['Equipamento de origem (estoque)', it.equipamento || ''],
+        ['Categoria', it.categoria || ''], ['Quantidade retirada', String(d.qtd)],
+        ['Saldo após a saída', String(Math.max(0, (parseInt(it.quantidade) || 0) - d.qtd))]
+      ], 34);
+      y = section('DESTINO', [
+        ['Unidade de destino', d.unidade], ['Equipamento na unidade', d.equipDestino],
+        ['Nº de série / Patrimônio', d.serieDestino || '—']
+      ], y);
+      y = section('RESPONSÁVEL', [['Técnico responsável', d.tecnico], ['Data / Hora', d.dataHora]], y);
+
+      y += 22;
+      doc.setDrawColor(120, 120, 120);
+      doc.line(20, y, 95, y); doc.line(115, y, 190, y);
+      doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+      doc.text('Técnico responsável', 57.5, y + 5, { align: 'center' });
+      doc.text('Recebido por (unidade de destino)', 152.5, y + 5, { align: 'center' });
+      doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+      doc.text('Sistema de Gestão de Estoque - Hospitalar & Laboratorial', 14, 287);
+
+      doc.save(`Comprovante_Saida_${(it.peca || 'peca').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`);
     }
 
     function openCreateModal() {
