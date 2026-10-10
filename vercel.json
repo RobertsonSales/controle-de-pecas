@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/config", "destination": "/api/config.js" },
+    { "source": "/api/patrimonio", "destination": "https://equipamentosonline.vercel.app/api/patrimonio" },
     { "source": "/(.*)", "destination": "/public/index.html" }
   ]
 }
