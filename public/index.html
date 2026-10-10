@@ -1555,6 +1555,8 @@
         const d = r.data || {};
         if (r.unconfirmed) {
           showToast(`Operação de ${tipo} enviada, mas o servidor não confirmou a gravação. Verifique a planilha.`, 'err');
+        } else if (d.aviso) {
+          showToast(d.aviso, 'err');
         } else if (tipo === 'Saída' && d.unidadeGravada === undefined) {
           showToast('O servidor respondeu, mas parece ser uma versão ANTIGA do Apps Script (não grava unidade/equipamento). Publique a nova versão.', 'err');
         } else if (tipo === 'Saída' && d.historico) {
