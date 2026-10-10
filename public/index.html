@@ -1506,6 +1506,20 @@
       openModal('movementModal');
     }
 
+    // Envia a gravação e LÊ a resposta do Apps Script (text/plain evita o bloqueio de CORS do navegador).
+    // Nunca reenvia: se a resposta não puder ser lida, avisa "não confirmado" para não duplicar baixas.
+    async function postApi(payload) {
+      let res, text;
+      try {
+        res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+        text = await res.text();
+      } catch (e) { return { unconfirmed: true }; }
+      let json;
+      try { json = JSON.parse(text); } catch (e) { return { unconfirmed: true }; }
+      if (!json || json.ok === false) throw new Error((json && json.error) || 'o servidor recusou a gravação');
+      return json;
+    }
+
     async function handleStockMovement(e) {
       e.preventDefault();
       const rowIndex = parseInt(document.getElementById('movRowIndex').value);
@@ -1537,17 +1551,21 @@
       }
 
       try {
-        await fetch(API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino })
-        });
-        showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
+        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino });
+        const d = r.data || {};
+        if (r.unconfirmed) {
+          showToast(`Operação de ${tipo} enviada, mas o servidor não confirmou a gravação. Verifique a planilha.`, 'err');
+        } else if (tipo === 'Saída' && d.unidadeGravada === undefined) {
+          showToast('O servidor respondeu, mas parece ser uma versão ANTIGA do Apps Script (não grava unidade/equipamento). Publique a nova versão.', 'err');
+        } else if (tipo === 'Saída' && d.historico) {
+          showToast(`Saída salva. Histórico: aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
+        } else {
+          showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
+        }
         if (gerarDoc) gerarComprovanteSaida(docData);
         setTimeout(fetchData, 1200);
       } catch (err) {
-        showToast('Erro ao salvar operação.', 'err');
+        showToast('Erro ao salvar operação: ' + (err.message || err), 'err');
       }
     }
 
@@ -1863,16 +1881,11 @@
       }
 
       try {
-        await fetch(API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        showToast('Registro salvo com sucesso!', 'ok');
+        const r = await postApi(payload);
+        showToast(r.unconfirmed ? 'Registro enviado, mas o servidor não confirmou a gravação. Verifique a planilha.' : 'Registro salvo com sucesso!', r.unconfirmed ? 'err' : 'ok');
         setTimeout(fetchData, 1200);
       } catch (err) {
-        showToast('Erro ao salvar.', 'err');
+        showToast('Erro ao salvar: ' + (err.message || err), 'err');
       } finally {
         btn.disabled = false;
       }
