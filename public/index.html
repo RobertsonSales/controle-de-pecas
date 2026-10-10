@@ -928,6 +928,11 @@
           <textarea id="formFunc" rows="2" class="control"></textarea>
         </div>
 
+        <div class="form-row">
+          <label for="formObs">Observações do Operador</label>
+          <textarea id="formObs" rows="3" class="control" placeholder="Anotações livres sobre o item (estado, fornecedor, particularidades, etc.)"></textarea>
+        </div>
+
         <div class="form-grid">
           <div class="form-row">
             <label for="formPrev">Prevalência / Vida Útil</label>
@@ -1167,6 +1172,7 @@
         prioridade: s(item.prioridade) || 'Baixa',
         funcao: s(item.funcao),
         prevTroca: s(item.prevTroca),
+        observacoes: s(item.observacoes),
         quantidade: parseInt(item.quantidade) || 0
       };
     }
@@ -1264,6 +1270,7 @@
           <td>
             <div class="cell-strong">${escapeHtml(item.peca)}</div>
             <div class="cell-sub">${escapeHtml(item.funcao)}</div>
+            ${item.observacoes ? `<div class="cell-sub"><i class="ph ph-note"></i> <em>${escapeHtml(item.observacoes)}</em></div>` : ''}
           </td>
           <td><span class="cell-sub">${escapeHtml(item.categoria)}</span></td>
           <td class="center"><span class="${badgeClass(item.prioridade)}">${escapeHtml(item.prioridade)}</span></td>
@@ -1348,9 +1355,9 @@
       doc.setTextColor(185, 28, 28);
       doc.text(`${altaPrioridade} itens`, 202, 50);
 
-      const tableHeaders = [["Equipamento / Setor", "Peça / Insumo Crítico", "Categoria / Tipo", "Função Principal", "Vida Útil", "Prioridade", "Saldo"]];
+      const tableHeaders = [["Equipamento / Setor", "Peça / Insumo Crítico", "Categoria / Tipo", "Função Principal", "Vida Útil", "Prioridade", "Saldo", "Observações"]];
       const tableData = currentFilteredData.map(item => [
-        item.equipamento, item.peca, item.categoria, item.funcao, item.prevTroca, item.prioridade, item.quantidade
+        item.equipamento, item.peca, item.categoria, item.funcao, item.prevTroca, item.prioridade, item.quantidade, item.observacoes || ''
       ]);
 
       doc.autoTable({
@@ -1361,13 +1368,14 @@
         headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9, halign: 'left' },
         bodyStyles: { fontSize: 8.5, textColor: [40, 40, 40] },
         columnStyles: {
-          0: { cellWidth: 38 },
-          1: { cellWidth: 50, fontStyle: 'bold' },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 80 },
-          4: { cellWidth: 32 },
-          5: { cellWidth: 22, halign: 'center' },
-          6: { cellWidth: 12, halign: 'center', fontStyle: 'bold' }
+          0: { cellWidth: 30 },
+          1: { cellWidth: 42, fontStyle: 'bold' },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 58 },
+          4: { cellWidth: 26 },
+          5: { cellWidth: 20, halign: 'center' },
+          6: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
+          7: { cellWidth: 51 }
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         didParseCell: function (data) {
@@ -1477,6 +1485,7 @@
       document.getElementById('formPrio').value = item.prioridade;
       document.getElementById('formFunc').value = item.funcao;
       document.getElementById('formPrev').value = item.prevTroca;
+      document.getElementById('formObs').value = item.observacoes || '';
 
       document.getElementById('initialQtyContainer').classList.add('hidden');
       document.getElementById('tecnicoCadastroContainer').classList.add('hidden');
@@ -1496,6 +1505,7 @@
         prioridade: document.getElementById('formPrio').value,
         funcao: document.getElementById('formFunc').value,
         prevTroca: document.getElementById('formPrev').value,
+        observacoes: document.getElementById('formObs').value,
         quantidade: document.getElementById('formQty').value,
         tecnico: document.getElementById('formTecnico').value
       };
