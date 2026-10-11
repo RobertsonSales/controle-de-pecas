@@ -688,6 +688,134 @@
     .pdf-frame { width: 100%; height: min(70vh, 720px); border: 1px solid var(--border); border-radius: 10px; background: #fff; }
     .pdf-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 12px; }
     .pdf-note { font-size: .74rem; color: var(--text-muted); margin-top: 8px; }
+
+    /* ============================================================
+       v3.7 — CONTRASTE E COMPACTAÇÃO DOS MODAIS (cadastro / edição / entrada / saída)
+       ============================================================ */
+    :root {
+      --m-label: #334155;          /* rótulos: 10:1 sobre branco */
+      --m-input-bd: #7c8ba1;       /* borda do campo: >3:1 sobre o cartão */
+      --m-placeholder: #64748b;
+      --m-sub: #475569;
+      --m-head-bg: #f1f5f9;
+      --m-ac-hover: #e0eaff;
+      --btn-primary-bg: #2563eb;  --btn-primary-hover: #1d4ed8;
+      --btn-success-bg: #047857;  --btn-success-hover: #065f46;
+      --btn-danger-bg: #dc2626;   --btn-danger-hover: #b91c1c;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;          /* lista do <select>, setas do número e checkbox no tema escuro */
+      --input-bg: #0b1322;
+      --m-label: #dbe4f0;          /* 12:1 sobre o cartão */
+      --m-input-bd: #6b7c95;       /* >3:1 sobre o cartão */
+      --m-placeholder: #8fa0b7;
+      --m-sub: #b6c3d4;
+      --m-head-bg: #111a2b;
+      --m-ac-hover: #23406e;
+      --btn-primary-bg: #2563eb;  --btn-primary-hover: #3b74f0;
+      --btn-success-bg: #047857;  --btn-success-hover: #05966a;
+      --btn-danger-bg: #c81e1e;   --btn-danger-hover: #dc2626;
+    }
+    [data-theme="light"] { color-scheme: light; }
+
+    .modal .btn-primary { background: var(--btn-primary-bg); color: #fff; }
+    .modal .btn-primary:hover { background: var(--btn-primary-hover); }
+    .modal .btn-success { background: var(--btn-success-bg); color: #fff; }
+    .modal .btn-success:hover { background: var(--btn-success-hover); }
+    .modal .btn-danger { background: var(--btn-danger-bg); color: #fff; }
+    .modal .btn-danger:hover { background: var(--btn-danger-hover); }
+    .modal .btn-soft { color: var(--text); border-color: var(--m-input-bd); }
+    .modal .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .modal-card { border-color: var(--border-strong); padding: 16px 20px; }
+    .modal-card.wide { max-width: 680px; }
+    .modal-card.mov-card { max-width: 600px; }
+    .modal-head { padding-bottom: 10px; margin-bottom: 12px; }
+    .modal-head h3 { color: var(--text); }
+    .modal-close { color: var(--m-sub); }
+
+    .modal .form-row { gap: 4px; margin-bottom: 10px; }
+    .modal .form-grid { gap: 0 12px; }
+    .modal .form-grid.grid-auto { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .modal .form-row label { color: var(--m-label); font-size: .8rem; font-weight: 650; }
+    .modal input.control, .modal select.control, .modal textarea.control {
+      min-height: 40px; padding: 8px 12px; border-color: var(--m-input-bd); background-color: var(--input-bg); color: var(--text);
+    }
+    .modal textarea.control { resize: vertical; min-height: 0; line-height: 1.35; }
+    .modal input.control::placeholder, .modal textarea.control::placeholder { color: var(--m-placeholder); opacity: 1; }
+    .modal input.control:focus, .modal select.control:focus, .modal textarea.control:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .modal select.control { background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; }
+    .modal select.control option { background: var(--input-bg); color: var(--text); }
+    .modal input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+
+    .modal .selected-item { background: var(--m-head-bg); border-color: var(--border-strong); padding: 9px 12px; margin-bottom: 12px; }
+    .modal .selected-item span { color: var(--m-sub); }
+    .modal .selected-item strong { color: var(--text); }
+
+    .modal .cat-row { margin-bottom: 8px; }
+    .modal .cat-filter label { color: var(--text); font-size: .82rem; font-weight: 500; }
+    .modal .cat-hint { color: var(--m-sub); }
+    .check-line { display: flex; gap: 8px; align-items: center; font-size: .84rem; margin: 2px 0 6px; color: var(--text); cursor: pointer; }
+
+    /* lista de sugestões (antes usava --surface, que não existia → fundo branco e texto invisível no escuro) */
+    .ac-list { background: var(--panel); border: 1px solid var(--border-strong); box-shadow: var(--shadow); }
+    .ac-item { color: var(--text); }
+    .ac-item small, .ac-empty { color: var(--m-sub); }
+    .ac-item.active, .ac-item:hover { background: var(--m-ac-hover); }
+    [data-theme="dark"] .ac-item mark { background: rgba(250, 204, 21, .32); color: #fff; }
+
+    .modal-foot { padding-top: 12px; margin-top: 4px; }
+
+    @media (max-height: 640px) and (min-width: 561px) {
+      .modal { padding: 10px; align-items: center; }
+      .modal-card { max-height: calc(100vh - 20px); padding: 12px 18px; }
+      .modal .form-row { margin-bottom: 8px; }
+      .modal input.control, .modal select.control { min-height: 36px; padding: 6px 11px; }
+      .modal .selected-item { padding: 7px 11px; margin-bottom: 10px; }
+      .modal-head { padding-bottom: 8px; margin-bottom: 10px; }
+    }
+    @media (max-width: 768px) {
+      .modal .form-grid { grid-template-columns: 1fr 1fr; }   /* campos curtos continuam lado a lado */
+      .modal .form-grid.grid-auto { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+      .modal { align-items: center; padding: 10px; }
+      .modal-card { max-height: calc(100vh - 20px); }
+    }
+    @media (max-width: 400px) {
+      .modal .form-grid.equip-grid { grid-template-columns: 1fr; }
+      .modal-card { padding: 12px 14px; }
+      .modal-foot { flex-direction: row; }
+      .modal-foot .btn { width: auto; flex: 1 1 0; }
+    }
+
+    /* ============================================================
+       v3.7 — PROGRESSO DA GERAÇÃO DO COMPROVANTE (PDF)
+       ============================================================ */
+    #progressModal { z-index: 70; }
+    .progress-card { max-width: 460px; }
+    .progress-card .modal-head h3 { display: flex; align-items: center; gap: 8px; }
+    .prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .prog-pct { font-size: 2rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+    .prog-time { font-size: .82rem; color: var(--m-sub); font-variant-numeric: tabular-nums; }
+    .prog-bar { height: 10px; border-radius: 999px; background: var(--m-head-bg); border: 1px solid var(--border-strong); overflow: hidden; }
+    .prog-bar > div { height: 100%; width: 0; background: var(--btn-primary-bg); border-radius: inherit; transition: width .25s ease; }
+    .prog-bar.done > div { background: var(--btn-success-bg); }
+    .prog-bar.fail > div { background: var(--btn-danger-bg); }
+    .prog-msg { font-size: .86rem; color: var(--text); margin: 10px 0 12px; min-height: 1.2em; }
+    .prog-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+    .prog-steps li { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--m-sub); }
+    /* indicadores só em CSS (não dependem da biblioteca de ícones) */
+    .prog-steps .dot { flex: 0 0 18px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--m-input-bd);
+      display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; color: #fff; }
+    .prog-steps li.active { color: var(--text); font-weight: 650; }
+    .prog-steps li.active .dot { border-color: var(--accent); border-top-color: transparent; animation: spin .9s linear infinite; }
+    .prog-steps li.done .dot { background: var(--btn-success-bg); border-color: var(--btn-success-bg); }
+    .prog-steps li.done .dot::after { content: '\2713'; }
+    .prog-steps li.fail { color: var(--text); }
+    .prog-steps li.fail .dot { background: var(--btn-danger-bg); border-color: var(--btn-danger-bg); }
+    .prog-steps li.fail .dot::after { content: '\2715'; }
+    @media (prefers-reduced-motion: reduce) { .prog-steps li.active .dot { animation: none; } .prog-bar > div { transition: none; } }
   </style>
 </head>
 <body>
@@ -874,7 +1002,7 @@
 
   <!-- ============================ MODAL: MOVIMENTAR ESTOQUE ============================ -->
   <div id="movementModal" class="modal hidden">
-    <div class="modal-card narrow">
+    <div class="modal-card mov-card">
       <div class="modal-head">
         <h3 id="movModalTitle">Movimentar Estoque</h3>
         <button class="modal-close" onclick="closeModal('movementModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
@@ -888,9 +1016,15 @@
           <strong id="movPecaName"></strong>
         </div>
 
-        <div class="form-row">
-          <label for="movQty">Quantidade da Operação</label>
-          <input type="number" id="movQty" min="1" value="1" required class="control">
+        <div class="form-grid mov-grid">
+          <div class="form-row">
+            <label for="movQty">Quantidade da Operação</label>
+            <input type="number" id="movQty" min="1" value="1" required class="control">
+          </div>
+          <div class="form-row">
+            <label for="movTecnico">Técnico Responsável *</label>
+            <input type="text" id="movTecnico" required placeholder="Nome do técnico/engenheiro" class="control">
+          </div>
         </div>
 
         <div class="exit-only hidden" id="exitFields">
@@ -899,7 +1033,7 @@
             <input type="text" id="movUnidade" autocomplete="off" placeholder="Digite para buscar a unidade..." class="control">
             <div class="ac-list hidden" id="acUnidade"></div>
           </div>
-          <div class="form-row" style="margin-bottom:8px">
+          <div class="form-row cat-row">
             <label>Exibir também na lista de equipamentos</label>
             <div class="cat-filter">
               <label><input type="checkbox" id="catAuxiliar" data-cat="auxiliar"> Auxiliar</label>
@@ -908,23 +1042,20 @@
             </div>
             <div class="cat-hint" id="catHint"></div>
           </div>
-          <div class="form-row ac-wrap">
-            <label for="movEquipDestino">Equipamento na Unidade *</label>
-            <input type="text" id="movEquipDestino" autocomplete="off" placeholder="Digite para buscar o equipamento..." class="control">
-            <div class="ac-list hidden" id="acEquip"></div>
+          <div class="form-grid equip-grid">
+            <div class="form-row ac-wrap">
+              <label for="movEquipDestino">Equipamento na Unidade *</label>
+              <input type="text" id="movEquipDestino" autocomplete="off" placeholder="Buscar o equipamento..." class="control">
+              <div class="ac-list hidden" id="acEquip"></div>
+            </div>
+            <div class="form-row">
+              <label for="movSerieDestino">Nº de Série / Patrimônio</label>
+              <input type="text" id="movSerieDestino" placeholder="Automático quando disponível" class="control">
+            </div>
           </div>
-          <div class="form-row">
-            <label for="movSerieDestino">Nº de Série / Patrimônio</label>
-            <input type="text" id="movSerieDestino" placeholder="Preenchido automaticamente quando disponível" class="control">
-          </div>
-          <label style="display:flex;gap:8px;align-items:center;font-size:.8rem;margin-bottom:12px;color:var(--text-muted)">
+          <label class="check-line">
             <input type="checkbox" id="movGerarComprovante" checked> Gerar comprovante de saída (PDF)
           </label>
-        </div>
-
-        <div class="form-row">
-          <label for="movTecnico">Técnico Responsável *</label>
-          <input type="text" id="movTecnico" required placeholder="Nome do técnico de laboratório/engenheiro" class="control">
         </div>
 
         <div class="modal-foot">
@@ -932,6 +1063,25 @@
           <button type="submit" id="movSubmitBtn" class="btn btn-primary">Registrar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ============================ MODAL: PROGRESSO DO COMPROVANTE ============================ -->
+  <div id="progressModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="progTitle">
+    <div class="modal-card progress-card">
+      <div class="modal-head">
+        <h3 id="progTitle"><i class="ph ph-file-pdf"></i> Gerando comprovante de saída</h3>
+      </div>
+      <div class="prog-top">
+        <div class="prog-pct" id="progPct" aria-live="polite">0%</div>
+        <div class="prog-time" id="progTime">Tempo decorrido: 0,0 s</div>
+      </div>
+      <div class="prog-bar" id="progBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progFill"></div></div>
+      <div class="prog-msg" id="progMsg">Iniciando…</div>
+      <ol class="prog-steps" id="progSteps"></ol>
+      <div class="modal-foot hidden" id="progFoot">
+        <button type="button" class="btn btn-soft" onclick="Progresso.fechar()">Fechar</button>
+      </div>
     </div>
   </div>
 
@@ -955,7 +1105,7 @@
 
   <!-- ============================ MODAL: CADASTRAR / EDITAR PEÇA ============================ -->
   <div id="itemFormModal" class="modal hidden">
-    <div class="modal-card">
+    <div class="modal-card wide">
       <div class="modal-head">
         <h3 id="formModalTitle">Formulário de Peça</h3>
         <button class="modal-close" onclick="closeModal('itemFormModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
@@ -994,10 +1144,10 @@
 
         <div class="form-row">
           <label for="formObs">Observações do Operador</label>
-          <textarea id="formObs" rows="3" class="control" placeholder="Anotações livres sobre o item (estado, fornecedor, particularidades, etc.)"></textarea>
+          <input type="text" id="formObs" class="control" maxlength="500" placeholder="Anotações livres (estado, fornecedor, particularidades...)">
         </div>
 
-        <div class="form-grid">
+        <div class="form-grid grid-auto">
           <div class="form-row">
             <label for="formPrev">Prevalência / Vida Útil</label>
             <input type="text" id="formPrev" placeholder="Ex: 3 a 6 meses" class="control">
@@ -1006,11 +1156,10 @@
             <label for="formQty">Qtd Inicial de Estoque</label>
             <input type="number" id="formQty" min="0" value="0" class="control">
           </div>
-        </div>
-
-        <div class="form-row" id="tecnicoCadastroContainer">
-          <label for="formTecnico">Técnico Responsável pelo Cadastro *</label>
-          <input type="text" id="formTecnico" placeholder="Nome do responsável" class="control">
+          <div class="form-row" id="tecnicoCadastroContainer">
+            <label for="formTecnico">Técnico Responsável *</label>
+            <input type="text" id="formTecnico" placeholder="Nome do responsável" class="control">
+          </div>
         </div>
 
         <div class="modal-foot">
@@ -1173,15 +1322,7 @@
         if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); closeModal('pdfPreviewModal'); }
       });
 
-      try {
-        const configRes = await fetch('/api/config');
-        if (configRes.ok) {
-          const config = await configRes.json();
-          API_URL = config.apiUrl || API_URL;
-        }
-      } catch (e) {
-        console.warn("Sem endpoint /api/config. Certifique-se de configurar a API_URL.");
-      }
+      await resolveApiUrl();
 
       /* Permite abrir direto no painel via ?view=dashboard */
       let startView = 'home';
@@ -1195,6 +1336,72 @@
       } else {
         showView('home');
         fetchData(true);
+      }
+    }
+
+    /* ==================== ESCOLHA DO ENDEREÇO DA API (v3.6) ====================
+       Antes: a variável GOOGLE_SHEETS_WEB_APP_URL da Vercel (/api/config) SUBSTITUÍA a URL do código sem
+       nenhuma verificação — se ela apontasse para uma implantação antiga do Apps Script, as saídas eram
+       gravadas sem unidade/equipamento e ninguém percebia.
+       Agora: testa cada endereço candidato com ?action=versao e usa o primeiro que responde com a versão
+       nova (que grava unidade/equipamento). Se nenhum responder assim, mostra um aviso permanente. */
+    const MIN_API_VERSION = 3.6;
+    let apiInfo = null;        // resposta de ?action=versao do endereço escolhido
+    let apiDesatualizada = false;
+
+    async function probeApi(url) {
+      try {
+        const u = new URL(url);
+        u.searchParams.set('action', 'versao');
+        const res = await fetch(u.toString());
+        const json = JSON.parse(await res.text());
+        const d = json && json.ok && json.data && !Array.isArray(json.data) ? json.data : null;
+        return { url, ok: true, info: d, versao: d ? parseFloat(d.versao) || 0 : 0 };
+      } catch (e) { return { url, ok: false, versao: 0 }; }
+    }
+
+    async function resolveApiUrl() {
+      const candidatos = [];
+      try {
+        const configRes = await fetch('/api/config', { cache: 'no-store' });
+        if (configRes.ok) {
+          const config = await configRes.json();
+          if (config && config.apiUrl) candidatos.push(String(config.apiUrl).trim());
+        }
+      } catch (e) {
+        console.warn('Sem endpoint /api/config — usando a API_URL do código.');
+      }
+      if (API_URL) candidatos.push(API_URL);
+      const unicos = [...new Set(candidatos.map(u => u.replace(/(\/exec)+\/?$/, '/exec')))];
+      if (!unicos.length) return;
+
+      const testes = await Promise.all(unicos.map(probeApi));
+      const boa = testes.find(t => t.versao >= MIN_API_VERSION && t.info && !t.info.erro);
+      const respondeu = testes.find(t => t.ok);
+      const escolhida = boa || respondeu || testes[0];
+      API_URL = escolhida.url;
+      apiInfo = escolhida.info || null;
+      apiDesatualizada = !boa && !!respondeu;
+      console.info('[Controle de Peças] endereços testados:', testes.map(t => ({ fim: t.url.slice(-14), versao: t.versao || 'antiga/sem resposta', erro: t.info && t.info.erro })), '→ usando', API_URL.slice(-14));
+
+      if (boa && unicos.length > 1 && boa.url !== unicos[0]) {
+        console.warn('A variável GOOGLE_SHEETS_WEB_APP_URL da Vercel aponta para uma implantação antiga. Atualize-a para:', boa.url);
+      }
+      atualizarAvisoApi();
+    }
+
+    function idCurto(url) {
+      const id = (String(url).match(/\/s\/([^/]+)\//) || [])[1] || '';
+      return id ? '…' + id.slice(0, 6) + '…' + id.slice(-6) : String(url);
+    }
+
+    function atualizarAvisoApi() {
+      if (apiInfo && apiInfo.erro) {
+        showStatus(`<strong>O Apps Script respondeu com erro de configuração:</strong> ${escapeHtml(apiInfo.erro)}`, 'err');
+      } else if (apiDesatualizada) {
+        showStatus(`<strong>Saídas NÃO estão gravando unidade/equipamento.</strong> O endereço do Apps Script em uso (${escapeHtml(idCurto(API_URL))}) executa uma versão antiga do código. ` +
+          `No Apps Script: <em>Implantar → Gerenciar implantações → ✏️ Editar → Versão: Nova versão → Implantar</em>. ` +
+          `Se criar uma implantação nova (URL nova), atualize também a variável <code>GOOGLE_SHEETS_WEB_APP_URL</code> na Vercel e faça <em>Redeploy</em>.`, 'err');
       }
     }
 
@@ -1221,6 +1428,7 @@
         rawInventoryData = (Array.isArray(data) ? data : []).map(normalizeItem);
         isDemoMode = false;
         showStatus('');
+        atualizarAvisoApi(); // mantém visível o aviso de API antiga/erro de configuração
         populateEquipFilter();
         applyFilters();
       } catch (err) {
@@ -1535,42 +1743,120 @@
       if (tipo === 'Saída') {
         if (!unidade || !equipDestino) { showToast('Informe a unidade de destino e o equipamento.', 'err'); return; }
         if (movItem && qtyInput > movItem.quantidade) { showToast(`Saldo insuficiente (disponível: ${movItem.quantidade}).`, 'err'); return; }
+        if (!isDemoMode && apiDesatualizada &&
+            !confirm('ATENÇÃO: o Apps Script em uso é uma versão antiga e NÃO grava a unidade nem o equipamento de destino no histórico.\n\nO saldo será baixado, mas o destino ficará em branco na aba de histórico.\n\nDeseja continuar mesmo assim?')) return;
       }
       const gerarDoc = tipo === 'Saída' && document.getElementById('movGerarComprovante').checked;
       const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, dataHora: new Date().toLocaleString('pt-BR') };
 
       closeModal('movementModal');
+      if (gerarDoc) Progresso.iniciar(); // o operador acompanha do registro até a liberação do PDF
 
       if (isDemoMode) {
         const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
         if (item) item.quantidade = Math.max(0, item.quantidade + delta);
         applyFilters();
         showToast(`Operação de ${tipo} registrada (demonstração).`, 'ok');
-        if (gerarDoc) gerarComprovanteSaida(docData);
+        if (gerarDoc) { Progresso.etapa(1); await gerarComprovanteSaida(docData, Progresso); }
         return;
       }
 
       try {
         const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino });
+        if (gerarDoc) Progresso.etapa(1, r.unconfirmed ? 'Servidor não confirmou a gravação — confira a planilha depois.' : '');
         const d = r.data || {};
         if (r.unconfirmed) {
           showToast(`Operação de ${tipo} enviada, mas o servidor não confirmou a gravação. Verifique a planilha.`, 'err');
         } else if (d.aviso) {
           showToast(d.aviso, 'err');
         } else if (tipo === 'Saída' && d.unidadeGravada === undefined) {
-          const _id = (String(API_URL).match(/\/s\/([^/]+)\//) || [])[1] || '';
-          showToast('O servidor respondeu, mas parece ser uma versão ANTIGA do Apps Script (não grava unidade/equipamento). Publique a nova versão. Endereço em uso: …' + _id.slice(0, 6) + '…' + _id.slice(-6), 'err');
+          apiDesatualizada = true;
+          atualizarAvisoApi(); // aviso permanente (o toast some em 3 s e passava despercebido)
+          showToast('Saldo baixado, mas o Apps Script em uso é ANTIGO e não gravou unidade/equipamento. Veja o aviso no topo do painel.', 'err');
         } else if (tipo === 'Saída' && d.historico) {
           showToast(`Saída salva na planilha "${d.planilha || '?'}" › aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
         } else {
           showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
         }
-        if (gerarDoc) gerarComprovanteSaida(docData);
+        if (gerarDoc) await gerarComprovanteSaida(docData, Progresso);
         setTimeout(fetchData, 1200);
       } catch (err) {
+        if (gerarDoc && Progresso.ativo) Progresso.falhar('Erro ao salvar a operação: ' + (err.message || err) + ' — o comprovante não foi gerado.');
         showToast('Erro ao salvar operação: ' + (err.message || err), 'err');
       }
     }
+
+    /* ==================== PROGRESSO DO COMPROVANTE (PDF) ====================
+       Etapas reais: cada uma tem uma faixa de %; enquanto a etapa espera (ex.: resposta do Google),
+       a barra avança devagar dentro da faixa, sem nunca passar do limite — e salta quando a etapa termina. */
+    const Progresso = {
+      etapas: [
+        { txt: 'Registrando a saída na planilha',            de: 0,  ate: 55 },
+        { txt: 'Confirmando a gravação no histórico',         de: 55, ate: 65 },
+        { txt: 'Montando o comprovante (peça, destino, responsável)', de: 65, ate: 85 },
+        { txt: 'Gerando o arquivo PDF',                       de: 85, ate: 97 },
+        { txt: 'Documento liberado',                          de: 100, ate: 100 }
+      ],
+      ativo: false, atual: 0, pct: 0, t0: 0, timer: null,
+      el: id => document.getElementById(id),
+      iniciar() {
+        this.ativo = true; this.atual = -1; this.pct = 0; this.t0 = performance.now();
+        this.el('progSteps').innerHTML = this.etapas.map((e, i) => `<li data-i="${i}"><span class="dot" aria-hidden="true"></span><span>${e.txt}</span></li>`).join('');
+        this.el('progBar').className = 'prog-bar';
+        this.el('progFoot').classList.add('hidden');
+        this.el('progTitle').innerHTML = '<i class="ph ph-file-pdf"></i> Gerando comprovante de saída';
+        openModal('progressModal');
+        this.etapa(0);
+        clearInterval(this.timer);
+        this.timer = setInterval(() => this.tique(), 100);
+      },
+      tique() {
+        const e = this.etapas[this.atual]; if (!e) return;
+        if (this.pct < e.ate - 0.5) this.render(this.pct + Math.max(0.08, (e.ate - this.pct) * 0.035)); // aproximação suave do limite da etapa
+        this.el('progTime').textContent = 'Tempo decorrido: ' + ((performance.now() - this.t0) / 1000).toFixed(1).replace('.', ',') + ' s';
+      },
+      etapa(i, obs) {
+        if (!this.ativo) return;
+        for (let k = 0; k < this.etapas.length; k++) {
+          const li = this.el('progSteps').children[k]; if (!li) continue;
+          li.className = k < i ? 'done' : k === i ? 'active' : '';
+        }
+        this.atual = i;
+        this.render(Math.max(this.pct, this.etapas[i].de));
+        this.el('progMsg').textContent = obs || (this.etapas[i].txt + '…');
+      },
+      render(p) {
+        this.pct = Math.min(100, p);
+        const v = Math.floor(this.pct);
+        this.el('progFill').style.width = this.pct + '%';
+        this.el('progPct').textContent = v + '%';
+        this.el('progBar').setAttribute('aria-valuenow', v);
+      },
+      async concluir() {
+        if (!this.ativo) return;
+        this.etapa(this.etapas.length - 1);
+        this.el('progSteps').lastElementChild.className = 'done';
+        this.render(100); this.tique();
+        this.el('progBar').className = 'prog-bar done';
+        this.el('progMsg').textContent = 'Comprovante pronto — abrindo a pré-visualização…';
+        clearInterval(this.timer);
+        await new Promise(r => setTimeout(r, 650)); // tempo para o operador ver o 100%
+        this.ativo = false;
+        document.getElementById('progressModal').classList.add('hidden');
+      },
+      falhar(msg) {
+        clearInterval(this.timer);
+        const li = this.el('progSteps').children[Math.max(0, this.atual)];
+        if (li) li.className = 'fail';
+        this.el('progBar').className = 'prog-bar fail';
+        this.el('progTitle').innerHTML = '<i class="ph ph-warning-circle"></i> Não foi possível gerar o comprovante';
+        this.el('progMsg').textContent = msg;
+        this.el('progFoot').classList.remove('hidden');
+        this.ativo = false;
+      },
+      fechar() { clearInterval(this.timer); this.ativo = false; document.getElementById('progressModal').classList.add('hidden'); }
+    };
+    const pausa = ms => new Promise(r => requestAnimationFrame(() => setTimeout(r, ms))); // deixa a tela atualizar entre etapas
 
     /* ==================== UNIDADES / EQUIPAMENTOS (BUSCA INTELIGENTE) ==================== */
     let unidadesData = null; // [{unidade, equipamento, serie, setor}]
@@ -1745,7 +2031,11 @@
     document.addEventListener('DOMContentLoaded', initExitAutocomplete);
 
     /* ==================== COMPROVANTE DE SAÍDA (PDF A4) ==================== */
-    function gerarComprovanteSaida(d) {
+    async function gerarComprovanteSaida(d, prog) {
+      const P = prog && prog.ativo ? prog : null;
+      try {
+      if (P) { await pausa(350); P.etapa(2); await pausa(200); }
+      if (!window.jspdf) throw new Error('a biblioteca de PDF não carregou (verifique a conexão)');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const it = d.item || {};
@@ -1772,10 +2062,12 @@
         ['Categoria', it.categoria || ''], ['Quantidade retirada', String(d.qtd)],
         ['Saldo após a saída', String(Math.max(0, (parseInt(it.quantidade) || 0) - d.qtd))]
       ], 34);
+      if (P) { P.el('progMsg').textContent = 'Montando o comprovante: destino…'; await pausa(180); }
       y = section('DESTINO', [
         ['Unidade de destino', d.unidade], ['Equipamento na unidade', d.equipDestino],
         ['Nº de série / Patrimônio', d.serieDestino || '—']
       ], y);
+      if (P) { P.el('progMsg').textContent = 'Montando o comprovante: responsável e assinaturas…'; await pausa(180); }
       y = section('RESPONSÁVEL', [['Técnico responsável', d.tecnico], ['Data / Hora', d.dataHora]], y);
 
       y += 22;
@@ -1787,14 +2079,21 @@
       doc.setFontSize(8); doc.setTextColor(150, 150, 150);
       doc.text('Sistema de Gestão de Estoque - Hospitalar & Laboratorial', 14, 287);
 
-      showPdfPreview(doc, `Comprovante_Saida_${(it.peca || 'peca').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`);
+      if (P) { P.etapa(3); await pausa(200); }
+      const blob = doc.output('blob');
+      if (P) await P.concluir();
+      showPdfPreview(doc, `Comprovante_Saida_${(it.peca || 'peca').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`, blob);
+      } catch (e) {
+        if (P) P.falhar('Falha ao gerar o PDF: ' + (e.message || e) + '. A saída já foi registrada na planilha.');
+        else showToast('Falha ao gerar o PDF: ' + (e.message || e), 'err');
+      }
     }
 
     /* ---- Pré-visualização do PDF antes de baixar ---- */
     let pdfPreviewUrl = null, pdfPreviewName = 'comprovante.pdf';
-    function showPdfPreview(doc, filename) {
+    function showPdfPreview(doc, filename, blob) {
       if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
-      pdfPreviewUrl = URL.createObjectURL(doc.output('blob'));
+      pdfPreviewUrl = URL.createObjectURL(blob || doc.output('blob'));
       pdfPreviewName = filename;
       document.getElementById('pdfFrame').src = pdfPreviewUrl;
       document.getElementById('pdfOpenTab').href = pdfPreviewUrl;
