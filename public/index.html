@@ -224,6 +224,7 @@
     }
     .icon-btn:hover { background: var(--row-hover); }
     a.btn-link, a.btn-link:visited { text-decoration: none; color: var(--text); }
+    .pdf-actions a.btn, .pdf-actions a.btn:visited { text-decoration: none; color: var(--text); }
     .spin { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -686,8 +687,11 @@
     .cat-filter label { display: inline-flex; gap: 6px; align-items: center; font-size: .82rem; font-weight: 500; color: var(--text); cursor: pointer; }
     .cat-hint { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
     .modal-card.pdf-card { max-width: 920px; display: flex; flex-direction: column; }
-    .pdf-frame { width: 100%; height: min(70vh, 720px); border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+    .pdf-frame { width: 100%; height: max(260px, min(calc(100vh - 210px), 760px)); border: 1px solid var(--border); border-radius: 10px; background: #fff; }
     .pdf-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .pdf-pages { overflow: auto; background: #525659; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .pdf-pages canvas { display: block; max-width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); border-radius: 2px; }
+    .pdf-pages .pdf-loading { color: #f1f5f9; font-size: .9rem; margin: auto; }
     .pdf-note { font-size: .74rem; color: var(--text-muted); margin-top: 8px; }
 
     /* ============================================================
@@ -1100,11 +1104,12 @@
   <div id="pdfPreviewModal" class="modal hidden">
     <div class="modal-card pdf-card">
       <div class="modal-head">
-        <h3>Pré-visualização do Comprovante de Saída</h3>
+        <h3 id="pdfPreviewTitle">Pré-visualização do Comprovante de Saída</h3>
         <button class="modal-close" onclick="closeModal('pdfPreviewModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
       </div>
       <iframe id="pdfFrame" class="pdf-frame" title="Comprovante de saída (PDF)"></iframe>
-      <div class="pdf-note">Se a visualização não aparecer neste dispositivo, use "Abrir em nova aba".</div>
+      <div id="pdfPages" class="pdf-frame pdf-pages hidden" role="document" aria-label="Páginas do PDF"></div>
+      <div class="pdf-note" id="pdfNote">Confira o documento antes de baixar ou imprimir.</div>
       <div class="pdf-actions">
         <button type="button" class="btn btn-soft" onclick="closeModal('pdfPreviewModal')">Fechar</button>
         <a id="pdfOpenTab" class="btn btn-soft" target="_blank" rel="noopener">Abrir em nova aba</a>
@@ -1684,8 +1689,9 @@
         }
       });
 
-      doc.save(`Relatorio_Estoque_Pecas_${new Date().toISOString().slice(0, 10)}.pdf`);
-      showToast('Relatório PDF gerado.', 'ok');
+      // v3.10: em vez de baixar direto, abre a pré-visualização — o operador confere e decide baixar/imprimir
+      showPdfPreview(doc, `Relatorio_Estoque_Pecas_${new Date().toISOString().slice(0, 10)}.pdf`, null,
+        `Pré-visualização do Relatório de Peças · ${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`);
     }
 
     /* ==================== AÇÕES DE ENTRADA / SAÍDA ==================== */
@@ -2167,22 +2173,89 @@
 
     /* ---- Pré-visualização do PDF antes de baixar ---- */
     let pdfPreviewUrl = null, pdfPreviewName = 'comprovante.pdf';
-    function showPdfPreview(doc, filename, blob) {
+    function showPdfPreview(doc, filename, blob, titulo) {
+      document.getElementById('pdfPreviewTitle').textContent = titulo || 'Pré-visualização do Comprovante de Saída';
+      document.getElementById('pdfFrame').title = titulo || 'Comprovante de saída (PDF)';
       if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
       pdfPreviewUrl = URL.createObjectURL(blob || doc.output('blob'));
       pdfPreviewName = filename;
-      document.getElementById('pdfFrame').src = pdfPreviewUrl;
       document.getElementById('pdfOpenTab').href = pdfPreviewUrl;
+      const frame = document.getElementById('pdfFrame'), pages = document.getElementById('pdfPages');
+      // Navegador com visualizador de PDF (Chrome/Edge/Firefox/Safari no computador) → mostra no quadro.
+      // Sem visualizador (vários celulares) o quadro BAIXARIA o arquivo → desenha as páginas na tela com pdf.js.
+      const temVisualizador = navigator.pdfViewerEnabled !== false && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      frame.classList.toggle('hidden', !temVisualizador);
+      pages.classList.toggle('hidden', temVisualizador);
       openModal('pdfPreviewModal');
+      if (temVisualizador) frame.src = pdfPreviewUrl;
+      else { frame.src = 'about:blank'; renderPdfPages(blob || doc.output('blob')); }
+    }
+
+    /* ---- Renderização das páginas em tela (pdf.js), carregado só quando necessário ---- */
+    const PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    let pdfjsPromise = null, pdfRenderSeq = 0;
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (!pdfjsPromise) pdfjsPromise = new Promise((ok, fail) => {
+        const sc = document.createElement('script');
+        sc.src = PDFJS_URL;
+        sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; ok(window.pdfjsLib); };
+        sc.onerror = () => { pdfjsPromise = null; fail(new Error('não foi possível carregar o visualizador')); };
+        document.head.appendChild(sc);
+      });
+      return pdfjsPromise;
+    }
+    async function renderPdfPages(blob) {
+      const box = document.getElementById('pdfPages'), seq = ++pdfRenderSeq;
+      box.innerHTML = '<div class="pdf-loading">Preparando a visualização…</div>';
+      try {
+        const lib = await loadPdfJs();
+        const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+        if (seq !== pdfRenderSeq) return;
+        box.innerHTML = '';
+        const largura = Math.max(240, box.clientWidth - 20), dpr = Math.min(window.devicePixelRatio || 1, 2);
+        for (let n = 1; n <= pdf.numPages; n++) {
+          const page = await pdf.getPage(n);
+          if (seq !== pdfRenderSeq) return;
+          const base = page.getViewport({ scale: 1 });
+          const vp = page.getViewport({ scale: (largura / base.width) * dpr });
+          const cv = document.createElement('canvas');
+          cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+          cv.style.width = Math.floor(vp.width / dpr) + 'px';
+          cv.setAttribute('aria-label', 'Página ' + n + ' de ' + pdf.numPages);
+          box.appendChild(cv);
+          await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        }
+        document.getElementById('pdfNote').textContent = `${pdf.numPages} página(s). Confira o documento antes de baixar ou imprimir.`;
+      } catch (e) {
+        if (seq !== pdfRenderSeq) return;
+        box.innerHTML = '<div class="pdf-loading">Não foi possível exibir a prévia neste aparelho. Use "Abrir em nova aba" ou "Baixar PDF".</div>';
+      }
     }
     function downloadPdfPreview() {
       if (!pdfPreviewUrl) return;
       const a = document.createElement('a');
       a.href = pdfPreviewUrl; a.download = pdfPreviewName;
       document.body.appendChild(a); a.click(); a.remove();
+      showToast('PDF baixado: ' + pdfPreviewName, 'ok');
     }
     function printPdfPreview() {
       const f = document.getElementById('pdfFrame');
+      const canvases = Array.from(document.querySelectorAll('#pdfPages canvas'));
+      if (f.classList.contains('hidden') && canvases.length) {
+        // modo "páginas desenhadas": imprime as próprias páginas (o quadro está vazio nesse modo)
+        const pf = document.createElement('iframe');
+        pf.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+        document.body.appendChild(pf);
+        const d = pf.contentWindow.document;
+        d.open();
+        d.write('<!doctype html><html><head><style>@page{margin:0}body{margin:0}img{display:block;width:100%;page-break-after:always}img:last-child{page-break-after:auto}</style></head><body>' +
+          canvases.map(c => '<img src="' + c.toDataURL('image/png') + '">').join('') + '</body></html>');
+        d.close();
+        setTimeout(() => { try { pf.contentWindow.focus(); pf.contentWindow.print(); } catch (e) { window.open(pdfPreviewUrl, '_blank'); } setTimeout(() => pf.remove(), 2000); }, 300);
+        return;
+      }
       try { f.contentWindow.focus(); f.contentWindow.print(); }
       catch (e) { window.open(pdfPreviewUrl, '_blank'); }
     }
@@ -2274,6 +2347,8 @@
     function closeModal(id) { document.getElementById(id).classList.add('hidden');
       if (id === 'pdfPreviewModal' && pdfPreviewUrl) {
         document.getElementById('pdfFrame').src = 'about:blank';
+        document.getElementById('pdfPages').innerHTML = ''; pdfRenderSeq++;
+        document.getElementById('pdfNote').textContent = 'Confira o documento antes de baixar ou imprimir.';
         URL.revokeObjectURL(pdfPreviewUrl); pdfPreviewUrl = null;
       }
       const btn = document.getElementById('formSaveBtn');
