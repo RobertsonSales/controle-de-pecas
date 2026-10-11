@@ -223,6 +223,7 @@
       transition: background-color .18s, color .18s;
     }
     .icon-btn:hover { background: var(--row-hover); }
+    a.btn-link, a.btn-link:visited { text-decoration: none; color: var(--text); }
     .spin { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -835,6 +836,10 @@
         <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">
           <i class="ph ph-moon" id="themeIcon"></i>
         </button>
+        <a class="btn btn-soft btn-link" id="btnPatrimonio" href="https://equipamentosonline.vercel.app/" target="labmedic-patrimonio"
+           title="Patrimônio — equipamentos das unidades, seriais e preventivas (abre na aba do Patrimônio)" aria-label="Patrimônio: abrir o Equipamentos Online">
+          <i class="ph ph-buildings"></i> Patrimônio
+        </a>
         <button class="btn btn-soft hidden" id="btnExport" onclick="exportToPDF()">
           <i class="ph ph-file-pdf"></i> Exportar PDF
         </button>
@@ -2279,6 +2284,8 @@
       }
     }
 
+    // Nome desta aba: o botão "Peças" do Equipamentos Online volta para ela em vez de abrir outra
+    try { window.name = 'labmedic-controle-pecas'; } catch (e) {}
     window.onload = init;
   </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
