@@ -757,6 +757,7 @@
     .modal .cat-row { margin-bottom: 8px; }
     .modal .cat-filter label { color: var(--text); font-size: .82rem; font-weight: 500; }
     .modal .cat-hint { color: var(--m-sub); }
+    .modal input.control.serie-vazia { font-style: italic; color: var(--m-sub); }
     .check-line { display: flex; gap: 8px; align-items: center; font-size: .84rem; margin: 2px 0 6px; color: var(--text); cursor: pointer; }
 
     /* lista de sugestões (antes usava --surface, que não existia → fundo branco e texto invisível no escuro) */
@@ -1050,12 +1051,17 @@
             </div>
             <div class="form-row">
               <label for="movSerieDestino">Nº de Série / Patrimônio</label>
-              <input type="text" id="movSerieDestino" placeholder="Automático quando disponível" class="control">
+              <input type="text" id="movSerieDestino" placeholder="Automático quando disponível" class="control" autocomplete="off">
             </div>
           </div>
           <label class="check-line">
             <input type="checkbox" id="movGerarComprovante" checked> Gerar comprovante de saída (PDF)
           </label>
+        </div>
+
+        <div class="form-row">
+          <label for="movObs">Observações</label>
+          <input type="text" id="movObs" class="control" maxlength="500" placeholder="Anotações sobre a movimentação (motivo, condição da peça, O.S., etc.)">
         </div>
 
         <div class="modal-foot">
@@ -1695,7 +1701,8 @@
       document.getElementById('movPecaName').innerText = `${item.peca} (${item.equipamento})`;
       document.getElementById('movQty').value = 1;
       document.getElementById('movTecnico').value = '';
-      ['movUnidade','movEquipDestino','movSerieDestino'].forEach(id => document.getElementById(id).value = '');
+      ['movUnidade','movEquipDestino','movSerieDestino','movObs'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('movSerieDestino').dataset.auto = '1';
       document.querySelectorAll('.cat-filter input[data-cat]').forEach(c => c.checked = false);
       document.getElementById('catHint').textContent = '';
       document.getElementById('exitFields').classList.toggle('hidden', tipo !== 'Saída');
@@ -1737,7 +1744,9 @@
       const delta = tipo === 'Entrada' ? qtyInput : -qtyInput;
       const unidade = document.getElementById('movUnidade').value.trim();
       const equipDestino = document.getElementById('movEquipDestino').value.trim();
-      const serieDestino = document.getElementById('movSerieDestino').value.trim();
+      if (tipo === 'Saída') preencherSerie(false); // equipamento digitado sem clicar na sugestão: busca o serial agora
+      const serieDestino = tipo === 'Saída' ? (document.getElementById('movSerieDestino').value.trim() || SERIAL_VAZIO) : '';
+      const observacoes = document.getElementById('movObs').value.trim();
       const movItem = rawInventoryData.find(i => i.rowIndex === rowIndex);
 
       if (tipo === 'Saída') {
@@ -1747,7 +1756,7 @@
             !confirm('ATENÇÃO: o Apps Script em uso é uma versão antiga e NÃO grava a unidade nem o equipamento de destino no histórico.\n\nO saldo será baixado, mas o destino ficará em branco na aba de histórico.\n\nDeseja continuar mesmo assim?')) return;
       }
       const gerarDoc = tipo === 'Saída' && document.getElementById('movGerarComprovante').checked;
-      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, dataHora: new Date().toLocaleString('pt-BR') };
+      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, observacoes, dataHora: new Date().toLocaleString('pt-BR') };
 
       closeModal('movementModal');
       if (gerarDoc) Progresso.iniciar(); // o operador acompanha do registro até a liberação do PDF
@@ -1762,7 +1771,7 @@
       }
 
       try {
-        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino });
+        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino, observacoes: observacoes });
         if (gerarDoc) Progresso.etapa(1, r.unconfirmed ? 'Servidor não confirmou a gravação — confira a planilha depois.' : '');
         const d = r.data || {};
         if (r.unconfirmed) {
@@ -1777,6 +1786,9 @@
           showToast(`Saída salva na planilha "${d.planilha || '?'}" › aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
         } else {
           showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
+        }
+        if (observacoes && !r.unconfirmed && d.observacaoGravada === undefined) {
+          setTimeout(() => showToast('Movimentação salva, mas o Apps Script em uso ainda não grava as Observações (publique a versão 3.7 do script).', 'err'), 3800);
         }
         if (gerarDoc) await gerarComprovanteSaida(docData, Progresso);
         setTimeout(fetchData, 1200);
@@ -1879,6 +1891,7 @@
     const keyOf = t => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
     // Aceita: [ {unidade,...} ]  |  {ok,data:[...]}  |  {ok,data:{headers,rows:[{...}]}}  |  {rows:[...]}
+    let serieCols = [];
     function parseUnidades(data) {
       if (data && data.ok === false) throw new Error(data.error || 'a API recusou a requisição');
       let rows = data;
@@ -1900,9 +1913,23 @@
             }
           }));
           if (!map.unidade) throw new Error('não encontrei a coluna "Unidade" (colunas recebidas: ' + keys.join(', ') + ')');
+          // v3.8 — TODAS as colunas que podem conter o serial, em ordem de preferência:
+          // 1º colunas de série/serial (qualquer grafia: "Nº Série", "Número Série", "Serial", "S/N", "SN"…),
+          // 2º colunas de patrimônio/tombamento. Para cada linha usa a PRIMEIRA que estiver preenchida.
+          const ocupadas = ['unidade', 'equipamento', 'setor', 'categoria'].map(f => map[f]).filter(Boolean);
+          const livres = keys.filter(k => ocupadas.indexOf(k) < 0);
+          const ehSerial = k => /serie|serial/.test(k) || /^(n|no|num|numero)?(sn|ns)$/.test(k);
+          const ehPatr = k => /patrimonio|tombamento|placa/.test(k);
+          serieCols = livres.filter(k => ehSerial(keyOf(k))).concat(livres.filter(k => !ehSerial(keyOf(k)) && ehPatr(keyOf(k))));
+          console.info('[Controle de Peças] colunas usadas para o Nº de série (em ordem):', serieCols.length ? serieCols : '(nenhuma encontrada) — colunas recebidas: ' + keys.join(', '));
         }
         const g = f => map[f] && r[map[f]] != null ? String(r[map[f]]).trim() : '';
-        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: g('serie'), setor: g('setor'), categoria: g('categoria') });
+        let serie = '';
+        for (const k of serieCols) {
+          const v = r[k] == null ? '' : String(r[k]).trim();
+          if (v && !/^(-+|—|n\/?a|s\/?n|sem( n[uú]mero| serial)?|nao (possui|consta|localizado)|não (possui|consta|localizado)|serial não localizado|0)$/i.test(v)) { serie = v; break; }
+        }
+        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: serie, setor: g('setor'), categoria: g('categoria') });
       });
       return out.filter(u => u.unidade);
     }
@@ -2015,7 +2042,13 @@
         const oc = categoriasOcultas();
         (unidadesData || []).forEach(u => { map[u.unidade] = (map[u.unidade] || 0) + (u.equipamento && !equipamentoOculto(u, oc) ? 1 : 0); });
         return Object.keys(map).map(k => ({ label: k, sub: `${map[k]} equipamento(s) lotado(s)` }));
-      }, () => { document.getElementById('movEquipDestino').value = ''; document.getElementById('movSerieDestino').value = ''; document.getElementById('movEquipDestino').focus(); });
+      }, () => {
+        // só limpa o equipamento se ele NÃO pertencer à unidade escolhida (antes apagava sempre, inclusive o serial)
+        const eq = document.getElementById('movEquipDestino');
+        if (!eq.value.trim() || !buscarEquip(document.getElementById('movUnidade').value, eq.value).length) {
+          eq.value = ''; limparSerieAuto(); eq.focus();
+        } else preencherSerie(false);
+      });
 
       setupAutocomplete('movEquipDestino', 'acEquip', () => {
         const un = normTxt(document.getElementById('movUnidade').value), oc = categoriasOcultas();
@@ -2024,9 +2057,46 @@
           .filter(u => u.equipamento && (!un || normTxt(u.unidade) === un) && !equipamentoOculto(u, oc))
           .map(u => ({ label: u.equipamento, sub: [u.serie && `Série/Patrimônio: ${u.serie}`, u.setor, !un && u.unidade].filter(Boolean).join(' · '), data: u }));
       }, o => {
-        document.getElementById('movSerieDestino').value = o.data.serie || '';
+        definirSerie(o.data.serie || SERIAL_VAZIO, true);
         if (!document.getElementById('movUnidade').value) document.getElementById('movUnidade').value = o.data.unidade;
       });
+
+      // equipamento digitado/colado sem clicar na sugestão → procura o serial ao sair do campo
+      const eqEl = document.getElementById('movEquipDestino');
+      eqEl.addEventListener('change', () => preencherSerie(false));
+      eqEl.addEventListener('input', () => { if (!eqEl.value.trim()) limparSerieAuto(); });
+      // o serial continua editável: se o operador digitar, o app não sobrescreve mais
+      const sEl = document.getElementById('movSerieDestino');
+      sEl.addEventListener('input', () => { sEl.dataset.auto = sEl.value.trim() ? '0' : '1'; sEl.classList.toggle('serie-vazia', sEl.value === SERIAL_VAZIO); });
+      sEl.addEventListener('focus', () => { if (sEl.value === SERIAL_VAZIO) sEl.select(); });
+    }
+
+    /* ---- Nº de série do equipamento de destino (v3.8) ---- */
+    const SERIAL_VAZIO = 'Serial não localizado';
+    function buscarEquip(unidade, equip) {
+      const un = normTxt(unidade), eq = normTxt(equip);
+      if (!eq) return [];
+      return (unidadesData || []).filter(u => normTxt(u.equipamento) === eq && (!un || normTxt(u.unidade) === un));
+    }
+    function definirSerie(valor, auto) {
+      const el = document.getElementById('movSerieDestino');
+      el.value = valor; el.dataset.auto = auto ? '1' : '0';
+      el.classList.toggle('serie-vazia', valor === SERIAL_VAZIO);
+    }
+    function limparSerieAuto() {
+      const el = document.getElementById('movSerieDestino');
+      if (el.dataset.auto !== '0') definirSerie('', true);
+    }
+    // Preenche a partir de unidade + equipamento. Não sobrescreve o que o operador digitou (a menos que force).
+    function preencherSerie(force) {
+      const el = document.getElementById('movSerieDestino');
+      if (!force && el.dataset.auto === '0' && el.value.trim()) return;
+      const unidade = document.getElementById('movUnidade').value, equip = document.getElementById('movEquipDestino').value;
+      if (!equip.trim()) { limparSerieAuto(); return; }
+      const achados = buscarEquip(unidade, equip);
+      const comSerie = achados.find(u => u.serie);
+      definirSerie(comSerie ? comSerie.serie : SERIAL_VAZIO, true);
+      if (!unidade.trim() && achados.length) document.getElementById('movUnidade').value = achados[0].unidade;
     }
     document.addEventListener('DOMContentLoaded', initExitAutocomplete);
 
@@ -2065,8 +2135,9 @@
       if (P) { P.el('progMsg').textContent = 'Montando o comprovante: destino…'; await pausa(180); }
       y = section('DESTINO', [
         ['Unidade de destino', d.unidade], ['Equipamento na unidade', d.equipDestino],
-        ['Nº de série / Patrimônio', d.serieDestino || '—']
+        ['Nº de série / Patrimônio', d.serieDestino || SERIAL_VAZIO]
       ], y);
+      if (d.observacoes) y = section('OBSERVAÇÕES', [['Observações', d.observacoes]], y);
       if (P) { P.el('progMsg').textContent = 'Montando o comprovante: responsável e assinaturas…'; await pausa(180); }
       y = section('RESPONSÁVEL', [['Técnico responsável', d.tecnico], ['Data / Hora', d.dataHora]], y);
 
