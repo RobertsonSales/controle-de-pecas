@@ -840,7 +840,7 @@
         <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">
           <i class="ph ph-moon" id="themeIcon"></i>
         </button>
-        <a class="btn btn-soft btn-link" id="btnPatrimonio" href="https://equipamentosonline.vercel.app/" target="labmedic-patrimonio"
+        <a class="btn btn-soft btn-link" id="btnPatrimonio" href="https://equipamentosonline.vercel.app/" target="labmedic-patrimonio" onclick="return abrirAppVizinho(event, this.href, 'labmedic-patrimonio')"
            title="Patrimônio — equipamentos das unidades, seriais e preventivas (abre na aba do Patrimônio)" aria-label="Patrimônio: abrir o Equipamentos Online">
           <i class="ph ph-buildings"></i> Patrimônio
         </a>
@@ -2357,6 +2357,23 @@
         const saveBtn = document.getElementById('movSubmitBtn');
         if (saveBtn) saveBtn.className = 'btn btn-primary';
       }
+    }
+
+
+    /* Alterna para a aba da outra aplicação SEM recarregá-la quando ela já está aberta.
+       window.open('', nome) devolve a aba existente sem navegar; se ela for de outro site (a outra aplicação),
+       o navegador não deixa ler o endereço → sinal de que já está carregada → só traz para a frente.
+       Se não existir, a aba nova nasce em branco → aí sim navega para o endereço. */
+    function abrirAppVizinho(ev, url, nome) {
+      let w = null;
+      try { w = window.open('', nome); } catch (e) {}
+      if (!w) return true;                       // bloqueador de pop-up: segue o link normalmente
+      let emBranco = false;
+      try { emBranco = !w.location.href || w.location.href === 'about:blank'; } catch (e) { emBranco = false; }
+      if (emBranco) w.location.href = url;       // não havia aba aberta → carrega a aplicação
+      try { w.focus(); } catch (e) {}
+      if (ev) ev.preventDefault();
+      return false;
     }
 
     // Nome desta aba: o botão "Peças" do Equipamentos Online volta para ela em vez de abrir outra
