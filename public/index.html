@@ -825,13 +825,22 @@
        v3.7 — PROGRESSO DA GERAÇÃO DO COMPROVANTE (PDF)
        ============================================================ */
     #progressModal { z-index: 70; }
-    .progress-card { max-width: 460px; }
+    .progress-card { max-width: 540px; border: 2px solid var(--accent) !important; box-shadow: 0 0 0 6px var(--accent-soft), 0 24px 60px -12px rgba(0,0,0,.55) !important; padding: 22px 26px !important; }
+    #progressModal { background: rgba(2, 6, 23, .78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .progress-card .modal-head h3 { font-size: 1.2rem !important; }
     .progress-card .modal-head h3 { display: flex; align-items: center; gap: 8px; }
     .prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-    .prog-pct { font-size: 2rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+    .prog-pct { font-size: 3.4rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; font-variant-numeric: tabular-nums; line-height: 1; }
     .prog-time { font-size: .82rem; color: var(--m-sub); font-variant-numeric: tabular-nums; }
-    .prog-bar { height: 10px; border-radius: 999px; background: var(--m-head-bg); border: 1px solid var(--border-strong); overflow: hidden; }
-    .prog-bar > div { height: 100%; width: 0; background: var(--btn-primary-bg); border-radius: inherit; transition: width .25s ease; }
+    .prog-bar { height: 18px; border-radius: 999px; background: var(--m-head-bg); border: 1px solid var(--border-strong); overflow: hidden; }
+    .prog-bar > div { height: 100%; width: 0; border-radius: inherit; transition: width .25s ease;
+      background: var(--btn-primary-bg) linear-gradient(45deg, rgba(255,255,255,.22) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.22) 50%, rgba(255,255,255,.22) 75%, transparent 75%) 0 0 / 22px 22px;
+      animation: progStripes .8s linear infinite; }
+    @keyframes progStripes { to { background-position: 22px 0; } }
+    .prog-bar.done > div, .prog-bar.fail > div { animation: none; }
+    .prog-msg { font-size: 1rem !important; font-weight: 650; }
+    .prog-time { font-size: .95rem !important; font-weight: 650; }
+    .prog-steps li { font-size: .9rem !important; }
     .prog-bar.done > div { background: var(--btn-success-bg); }
     .prog-bar.fail > div { background: var(--btn-danger-bg); }
     .prog-msg { font-size: .86rem; color: var(--text); margin: 10px 0 12px; min-height: 1.2em; }
@@ -847,7 +856,17 @@
     .prog-steps li.fail { color: var(--text); }
     .prog-steps li.fail .dot { background: var(--btn-danger-bg); border-color: var(--btn-danger-bg); }
     .prog-steps li.fail .dot::after { content: '\2715'; }
-    @media (prefers-reduced-motion: reduce) { .prog-steps li.active .dot { animation: none; } .prog-bar > div { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .prog-steps li.active .dot { animation: none; } .prog-bar > div { transition: none; animation: none; } }
+    /* aviso central de saldo */
+    #saldoModal { z-index: 68; }
+    .saldo-card { max-width: 500px; text-align: center; padding: 26px 26px 22px !important; border: 2px solid var(--danger) !important; box-shadow: 0 0 0 6px rgba(220,38,38,.15), 0 24px 60px -12px rgba(0,0,0,.55) !important; }
+    .saldo-icon { font-size: 3.2rem; color: var(--danger); line-height: 1; margin-bottom: 8px; }
+    .saldo-card h3 { font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .saldo-card p { font-size: .95rem; color: var(--text); line-height: 1.5; margin-bottom: 18px; }
+    .saldo-sub { color: var(--m-sub); font-weight: 500; }
+    .saldo-num { font-size: 1.1rem; }
+    .saldo-acoes { display: flex; flex-direction: column; gap: 8px; }
+    .saldo-acoes .btn { justify-content: center; width: 100%; }
 
     /* ============================================================
        v3.13 — PAINEL DE MOVIMENTAÇÕES
@@ -908,6 +927,13 @@
     [data-theme="dark"] .badge-cad { color: #93c5fd; }
     .badge-edi { background: var(--m-head-bg); color: var(--m-sub); border-color: var(--border-strong); }
     .mv-more { padding: 10px; text-align: center; }
+    .mv-loading { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 16px; color: var(--text); }
+    .mv-loading i { font-size: 2.6rem; color: var(--accent); }
+    .mv-loading b { font-size: 1.05rem; }
+    .mv-loading span { font-size: .95rem; color: var(--m-sub); font-variant-numeric: tabular-nums; }
+    .mv-loadbar { width: min(340px, 80%); height: 8px; border-radius: 99px; background: var(--m-head-bg); overflow: hidden; position: relative; }
+    .mv-loadbar div { position: absolute; inset: 0 auto 0 0; width: 35%; background: var(--accent); border-radius: 99px; animation: mvLoad 1.1s ease-in-out infinite; }
+    @keyframes mvLoad { 0% { left: -35%; } 100% { left: 100%; } }
     .mv-tag { display: block; width: max-content; margin-top: 4px; font-size: .68rem; font-weight: 750; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--m-sub); }
     .mv-tag.pend { color: #b45309; border-color: #f59e0b; background: rgba(245, 158, 11, .14); }
     .mv-tag.ok { color: #047857; border-color: #10b981; background: rgba(16, 185, 129, .12); }
@@ -1285,6 +1311,20 @@
     </div>
   </div>
 
+  <!-- ============================ AVISO CENTRAL: SEM SALDO ============================ -->
+  <div id="saldoModal" class="modal hidden" role="alertdialog" aria-modal="true" aria-labelledby="saldoTitle" aria-describedby="saldoMsg">
+    <div class="modal-card saldo-card">
+      <div class="saldo-icon" aria-hidden="true"><i class="ph ph-warning-octagon"></i></div>
+      <h3 id="saldoTitle">Baixa não permitida: saldo insuficiente</h3>
+      <p id="saldoMsg"></p>
+      <div class="saldo-acoes">
+        <button type="button" class="btn btn-success" id="saldoEntrada"><i class="ph ph-plus-circle"></i> Dar entrada agora</button>
+        <button type="button" class="btn btn-soft" id="saldoRetirada"><i class="ph ph-swap"></i> A peça foi retirada de outro equipamento</button>
+        <button type="button" class="btn btn-soft" onclick="closeModal('saldoModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============================ MODAL: PROGRESSO DO COMPROVANTE ============================ -->
   <div id="progressModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="progTitle">
     <div class="modal-card progress-card">
@@ -1550,7 +1590,7 @@
       document.addEventListener('keydown', e => {
         if (e.key !== 'Escape') return;
         // fecha só a janela que está por cima (ex.: o detalhe, sem fechar o painel de movimentações)
-        const ordem = ['pdfPreviewModal', 'movDetailModal', 'movementModal', 'itemFormModal', 'movDashModal'];
+        const ordem = ['saldoModal', 'pdfPreviewModal', 'movDetailModal', 'movementModal', 'itemFormModal', 'movDashModal'];
         const aberto = ordem.find(id => !document.getElementById(id).classList.contains('hidden'));
         if (aberto && !document.querySelector('.ac-list:not(.hidden)')) closeModal(aberto);
       });
@@ -1928,7 +1968,11 @@
       const action = selectElement.value;
       selectElement.value = '';
       if (action === 'entrada') openMovementModal(rowIndex, 'Entrada');
-      else if (action === 'saida') openMovementModal(rowIndex, 'Saída');
+      else if (action === 'saida') {
+        const it = rawInventoryData.find(i => i.rowIndex === rowIndex);
+        if (it && it.quantidade <= 0) avisoSemSaldo(it, 1, null); // sem saldo: avisa antes mesmo de abrir o formulário
+        else openMovementModal(rowIndex, 'Saída');
+      }
       else if (action === 'editar') openEditModal(rowIndex);
       else if (action === 'movs') { const it = rawInventoryData.find(i => i.rowIndex === rowIndex); openMovDash(it ? { peca: it.peca } : {}); }
     }
@@ -2014,7 +2058,7 @@
         if (!unidade || !equipDestino) { showToast('Informe a unidade de destino e o equipamento.', 'err'); return; }
         if (deEquip && (!retUn || !retEq)) { showToast('Informe a unidade e o equipamento de onde a peça foi retirada.', 'err'); document.getElementById(retUn ? 'origEquip' : 'origUnidade').focus(); return; }
         if (deEquip && normTxt(retUn) === normTxt(unidade) && normTxt(retEq) === normTxt(equipDestino)) { showToast('O equipamento de origem é o mesmo do destino. Confira os dados.', 'err'); return; }
-        if (!deEquip && movItem && qtyInput > movItem.quantidade) { showToast(`Saldo insuficiente (disponível: ${movItem.quantidade}). Se a peça foi retirada de outro equipamento, escolha essa origem.`, 'err'); return; }
+        if (!deEquip && movItem && qtyInput > movItem.quantidade) { avisoSemSaldo(movItem, qtyInput, capturarSaida()); return; }
         if (!isDemoMode && apiDesatualizada &&
             !confirm('ATENÇÃO: o Apps Script em uso é uma versão antiga e NÃO grava a unidade nem o equipamento de destino no histórico.\n\nO saldo será baixado, mas o destino ficará em branco na aba de histórico.\n\nDeseja continuar mesmo assim?')) return;
       }
@@ -2079,6 +2123,51 @@
         : `Saída salva na planilha "${d.planilha || '?'}" › aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
       else showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
       if (resolveLinha && !aviso) setTimeout(() => showToast('Pendência de reposição marcada como resolvida.', 'ok'), 3700);
+      // entrada feita para liberar uma baixa interrompida → reabre a baixa já preenchida
+      if (tipo === 'Entrada' && saidaPendente && saidaPendente.rowIndex === rowIndex && !r.unconfirmed) {
+        const sp = saidaPendente; saidaPendente = null;
+        setTimeout(() => { restaurarSaida(sp); showToast('Entrada registrada — agora confirme a baixa.', 'ok'); }, 400);
+      }
+    }
+
+
+    /* ==================== SEM SALDO: aviso central + "dar entrada e voltar à baixa" (v3.15) ==================== */
+    const CAMPOS_SAIDA = ['movQty', 'movTecnico', 'movObs', 'movUnidade', 'movEquipDestino', 'movSerieDestino', 'origUnidade', 'origEquip', 'origSerie', 'movResolveLinha'];
+    let saidaPendente = null; // baixa interrompida por falta de saldo, retomada depois da entrada
+    function capturarSaida() {
+      const v = {}; CAMPOS_SAIDA.forEach(id => v[id] = document.getElementById(id).value);
+      return { rowIndex: parseInt(document.getElementById('movRowIndex').value), valores: v, origem: origemAtual(), pdf: document.getElementById('movGerarComprovante').checked };
+    }
+    function restaurarSaida(sp) {
+      openMovementModal(sp.rowIndex, 'Saída', { resolveLinha: sp.valores.movResolveLinha, unidade: sp.valores.movUnidade, equipamento: sp.valores.movEquipDestino });
+      CAMPOS_SAIDA.forEach(id => { if (sp.valores[id] !== undefined) document.getElementById(id).value = sp.valores[id]; });
+      if (sp.valores.movSerieDestino) document.getElementById('movSerieDestino').dataset.auto = '0';
+      definirOrigem(sp.origem); document.getElementById('movGerarComprovante').checked = sp.pdf;
+    }
+    function avisoSemSaldo(item, qtdPedida, snapshot) {
+      closeModal('movementModal');
+      const falta = Math.max(1, qtdPedida - Math.max(0, item.quantidade));
+      document.getElementById('saldoMsg').innerHTML =
+        `<b>${escapeHtml(item.peca)}</b> <span class="saldo-sub">(${escapeHtml(item.equipamento)})</span><br>` +
+        `Saldo em estoque: <b class="saldo-num">${item.quantidade}</b> · Quantidade pedida: <b class="saldo-num">${qtdPedida}</b><br><br>` +
+        `Para dar a saída, registre antes a <b>entrada</b> da peça — inclusive para baixas de datas anteriores. ` +
+        `Depois da entrada, a baixa é retomada com os dados já preenchidos.`;
+      document.getElementById('saldoEntrada').onclick = () => {
+        closeModal('saldoModal');
+        saidaPendente = snapshot || { rowIndex: item.rowIndex, valores: { movQty: String(qtdPedida) }, origem: 'estoque', pdf: true };
+        openMovementModal(item.rowIndex, 'Entrada');
+        document.getElementById('movQty').value = falta;
+        if (snapshot && snapshot.valores.movTecnico) document.getElementById('movTecnico').value = snapshot.valores.movTecnico;
+        showToast(`Registre a entrada (sugestão: ${falta} un.). Em seguida a baixa será reaberta.`, 'ok');
+      };
+      document.getElementById('saldoRetirada').onclick = () => {
+        closeModal('saldoModal');
+        const sp = snapshot || { rowIndex: item.rowIndex, valores: { movQty: String(qtdPedida) }, origem: 'equipamento', pdf: true };
+        restaurarSaida(sp); definirOrigem('equipamento'); loadUnidades();
+        setTimeout(() => document.getElementById('origUnidade').focus(), 60);
+      };
+      openModal('saldoModal');
+      setTimeout(() => document.getElementById('saldoEntrada').focus(), 30);
     }
 
     /* ==================== PROGRESSO DO COMPROVANTE (PDF) ====================
@@ -2486,7 +2575,9 @@
       if (movData && !force) return;
       if (movCarregando) return movCarregando;
       const box = document.getElementById('mvConteudo');
-      box.innerHTML = '<div class="mv-status"><i class="ph ph-spinner spin"></i> Lendo o histórico da planilha…</div>';
+      const t0 = performance.now();
+      box.innerHTML = '<div class="mv-loading"><i class="ph ph-spinner spin"></i><b>Lendo o histórico da planilha…</b><span id="mvLoadTime">0,0 s</span><div class="mv-loadbar"><div></div></div></div>';
+      const tick = setInterval(() => { const el = document.getElementById('mvLoadTime'); if (el) el.textContent = ((performance.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s'; else clearInterval(tick); }, 100);
       movCarregando = (async () => {
         try {
           if (apiPronta) await apiPronta;
@@ -2501,7 +2592,7 @@
           movData = null;
           box.innerHTML = `<div class="mv-status"><i class="ph ph-warning-circle" style="font-size:1.6rem;color:var(--danger)"></i><br>Não foi possível carregar as movimentações: ${escapeHtml(e.message || e)}</div>`;
           throw e;
-        } finally { movCarregando = null; }
+        } finally { movCarregando = null; clearInterval(tick); }
       })();
       try { await movCarregando; } catch (e) { return; }
       preencherOpcoesMov();
@@ -2924,6 +3015,8 @@
       try { f.contentWindow.focus(); f.contentWindow.print(); }
       catch (e) { window.open(pdfPreviewUrl, '_blank'); }
     }
+
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#movementModal .btn-soft[onclick*="closeModal"], #movementModal .modal-close') && document.getElementById('movType').value === 'Entrada') saidaPendente = null; }, true);
 
     function openCreateModal() {
       document.getElementById('formModalTitle').innerText = 'Cadastrar Nova Peça';
