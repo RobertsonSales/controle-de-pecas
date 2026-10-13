@@ -1243,7 +1243,13 @@
     /* ==================== NAVEGAÇÃO ENTRE VIEWS ==================== */
     const HEADER_ACTION_IDS = ['btnExport', 'btnSync', 'btnNew'];
 
-    function showView(name) {
+    const VIEW_KEY = 'labmedic-pecas-view';
+    let currentView = 'home', viewEscolhida = false, apiPronta = null, carregandoDados = null;
+    function showView(name, opts) {
+      opts = opts || {};
+      currentView = name;
+      if (!opts.semRolagem) viewEscolhida = true; // o operador escolheu a tela: a inicialização não a troca mais
+      try { sessionStorage.setItem(VIEW_KEY, name); } catch (e) {}
       const home = document.getElementById('homeView');
       const dash = document.getElementById('dashboardView');
       const isDash = name === 'dashboard';
@@ -1252,10 +1258,13 @@
       dash.classList.toggle('hidden', !isDash);
       HEADER_ACTION_IDS.forEach(id => document.getElementById(id).classList.toggle('hidden', !isDash));
 
-      if (isDash && rawInventoryData.length === 0 && currentFilteredData.length === 0) {
+      if (isDash && carregandoDados) {            // planilha ainda sendo lida em segundo plano → mostra "carregando"
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('tableContainer').classList.add('hidden');
+      } else if (isDash && rawInventoryData.length === 0 && currentFilteredData.length === 0) {
         fetchData();
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!opts.semRolagem) window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function goHome() { showView('home'); }
@@ -1338,21 +1347,20 @@
         if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); closeModal('pdfPreviewModal'); }
       });
 
-      await resolveApiUrl();
-
-      /* Permite abrir direto no painel via ?view=dashboard */
+      /* Tela inicial: ?view=dashboard, ou a última tela usada nesta aba (sobrevive a recarregar a página).
+         v3.12: a tela é definida ANTES de testar a API e nunca mais é trocada pela inicialização —
+         antes, um clique em "Acessar painel" durante o teste da API era desfeito ao final (voltava à página inicial). */
       let startView = 'home';
       try {
         const p = new URLSearchParams(window.location.search).get('view');
-        if (p === 'dashboard') startView = 'dashboard';
+        const salva = sessionStorage.getItem(VIEW_KEY);
+        if (p === 'dashboard' || p === 'home') startView = p;
+        else if (salva === 'dashboard') startView = 'dashboard';
       } catch (e) {}
-
-      if (startView === 'dashboard') {
-        showView('dashboard');
-      } else {
-        showView('home');
-        fetchData(true);
-      }
+      apiPronta = resolveApiUrl();   // começa já; qualquer carga de dados espera por ele
+      if (!viewEscolhida) showView(startView, { semRolagem: true });
+      await apiPronta;
+      if (!rawInventoryData.length && !carregandoDados) fetchData(currentView !== 'dashboard'); // não mexe na tela
     }
 
     /* ==================== ESCOLHA DO ENDEREÇO DA API (v3.6) ====================
@@ -1421,7 +1429,17 @@
       }
     }
 
-    async function fetchData(silent) {
+    // Uma só carga por vez e sempre depois de escolher o endereço certo da API
+    function fetchData(silent) {
+      if (carregandoDados) return carregandoDados;
+      carregandoDados = (async () => {
+        try { if (apiPronta) await apiPronta; await fetchDataAgora(silent); }
+        finally { carregandoDados = null; }
+      })();
+      return carregandoDados;
+    }
+
+    async function fetchDataAgora(silent) {
       const loading = document.getElementById('loading');
       const table = document.getElementById('tableContainer');
       const refreshIcon = document.getElementById('refresh-icon');
@@ -2378,7 +2396,9 @@
 
     // Nome desta aba: o botão "Peças" do Equipamentos Online volta para ela em vez de abrir outra
     try { window.name = 'labmedic-controle-pecas'; } catch (e) {}
-    window.onload = init;
+    // Inicia assim que a página é montada (não espera as imagens do carrossel)
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
