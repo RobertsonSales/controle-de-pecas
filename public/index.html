@@ -763,6 +763,32 @@
     .modal .cat-filter label { color: var(--text); font-size: .82rem; font-weight: 500; }
     .modal .cat-hint { color: var(--m-sub); }
     .modal input.control.serie-vazia { font-style: italic; color: var(--m-sub); }
+    /* v3.14 — origem da peça na saída */
+    .modal .form-grid.mov-grid { grid-template-columns: 92px 1fr 1.35fr; }
+    #movementModal .selected-item { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 7px 12px; margin-bottom: 10px; }
+    #movementModal .selected-item span { display: inline; }
+    .modal-card.mov-card { max-width: 640px; }
+    .origem-row { flex-direction: row !important; align-items: center; gap: 10px !important; flex-wrap: wrap; margin-bottom: 6px !important; }
+    .origem-label { font-size: .8rem; font-weight: 650; color: var(--m-label); }
+    .seg { display: inline-flex; border: 1px solid var(--m-input-bd); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
+    .seg label { cursor: pointer; margin: 0; }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .seg span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: .82rem; font-weight: 650; color: var(--text); }
+    .seg label + label span { border-left: 1px solid var(--m-input-bd); }
+    .seg input:checked + span { background: var(--btn-primary-bg); color: #fff; }
+    .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .origem-box { border: 1px dashed var(--warn); border-radius: 10px; padding: 6px 10px 0; margin-bottom: 8px; background: color-mix(in srgb, var(--warn) 7%, transparent); }
+    .origem-box .form-row { margin-bottom: 8px; }
+    .origem-hint { font-size: .76rem; color: var(--text); margin-bottom: 4px; display: flex; gap: 6px; align-items: flex-start; }
+    .origem-hint i { color: var(--warn); margin-top: 2px; }
+    .modal .form-grid.origem-grid { grid-template-columns: 1.1fr 1.2fr .8fr; }
+    .resolve-hint { font-size: .8rem; padding: 7px 10px; border-radius: 9px; margin-bottom: 10px; background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); }
+    .foot-check { margin: 0 auto 0 0 !important; }
+    .modal .cat-row { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+    .modal .cat-row > label { margin: 0; }
+    .modal .cat-row .cat-hint { flex-basis: 100%; }
+    @media (max-width: 560px) { .modal .form-grid.mov-grid { grid-template-columns: 1fr 1.6fr; } .modal .form-grid.mov-grid > :last-child { grid-column: 1 / -1; }
+      .modal .form-grid.origem-grid { grid-template-columns: 1fr 1fr; } .modal .form-grid.origem-grid > :first-child { grid-column: 1 / -1; } .foot-check { flex-basis: 100%; } }
     .check-line { display: flex; gap: 8px; align-items: center; font-size: .84rem; margin: 2px 0 6px; color: var(--text); cursor: pointer; }
 
     /* lista de sugestões (antes usava --surface, que não existia → fundo branco e texto invisível no escuro) */
@@ -828,6 +854,7 @@
        ============================================================ */
     #movDashModal { z-index: 62; }
     #movDetailModal { z-index: 64; }
+    #pdfPreviewModal { z-index: 66; }   /* v3.14: a pré-visualização fica SEMPRE na frente dos painéis */
     .movdash-card { max-width: 1240px; height: calc(100vh - 32px); max-height: none; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
     .movdash-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--border-strong); }
     .movdash-head h3 { font-size: 1.08rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; margin-right: auto; }
@@ -842,7 +869,7 @@
     .mv-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
     .mv-chip .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
     .mv-clear { margin-left: auto; font-size: .8rem; color: var(--accent); background: none; border: none; cursor: pointer; font-weight: 650; }
-    .mv-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+    .mv-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
     .mv-kpi { background: var(--m-head-bg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 11px 13px; }
     .mv-kpi .l { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--m-sub); }
     .mv-kpi .v { font-size: 1.55rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
@@ -881,6 +908,14 @@
     [data-theme="dark"] .badge-cad { color: #93c5fd; }
     .badge-edi { background: var(--m-head-bg); color: var(--m-sub); border-color: var(--border-strong); }
     .mv-more { padding: 10px; text-align: center; }
+    .mv-tag { display: block; width: max-content; margin-top: 4px; font-size: .68rem; font-weight: 750; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--m-sub); }
+    .mv-tag.pend { color: #b45309; border-color: #f59e0b; background: rgba(245, 158, 11, .14); }
+    .mv-tag.ok { color: #047857; border-color: #10b981; background: rgba(16, 185, 129, .12); }
+    [data-theme="dark"] .mv-tag.pend { color: #fcd34d; } [data-theme="dark"] .mv-tag.ok { color: #6ee7b7; }
+    .mv-kpi-pend { text-align: left; cursor: pointer; font: inherit; color: inherit; }
+    .mv-kpi-pend.tem { border-color: #f59e0b; background: rgba(245, 158, 11, .1); }
+    .mv-kpi-pend:hover { border-color: var(--accent); }
+    .mv-chip-pend[aria-pressed="true"] { background: rgba(245, 158, 11, .16); border-color: #f59e0b; }
     .mv-status { padding: 30px 16px; text-align: center; color: var(--m-sub); font-size: .9rem; }
     .mv-detail dl { display: grid; grid-template-columns: 170px 1fr; gap: 8px 14px; margin: 0; font-size: .88rem; }
     .mv-detail dt { color: var(--m-sub); font-weight: 650; }
@@ -1113,16 +1148,48 @@
 
         <div class="form-grid mov-grid">
           <div class="form-row">
-            <label for="movQty">Quantidade da Operação</label>
+            <label for="movQty">Quantidade</label>
             <input type="number" id="movQty" min="1" value="1" required class="control">
           </div>
           <div class="form-row">
             <label for="movTecnico">Técnico Responsável *</label>
             <input type="text" id="movTecnico" required placeholder="Nome do técnico/engenheiro" class="control">
           </div>
+          <div class="form-row">
+            <label for="movObs">Observações</label>
+            <input type="text" id="movObs" class="control" maxlength="500" placeholder="Motivo, condição da peça, O.S.…">
+          </div>
         </div>
 
         <div class="exit-only hidden" id="exitFields">
+          <input type="hidden" id="movResolveLinha">
+          <div class="form-row origem-row">
+            <span class="origem-label" id="origemLabel">Origem da peça</span>
+            <div class="seg" role="radiogroup" aria-labelledby="origemLabel">
+              <label><input type="radio" name="movOrigem" value="estoque" checked><span><i class="ph ph-package"></i> Do estoque</span></label>
+              <label><input type="radio" name="movOrigem" value="equipamento"><span><i class="ph ph-swap"></i> Retirada de outro equipamento</span></label>
+            </div>
+          </div>
+          <div class="origem-box hidden" id="origemBox">
+            <div class="origem-hint"><i class="ph ph-info"></i><span>O estoque <b>não</b> será baixado — fica registrada uma <b>reposição pendente</b> no equipamento de origem.</span></div>
+            <div class="form-grid origem-grid">
+              <div class="form-row ac-wrap">
+                <label for="origUnidade">Retirada da unidade *</label>
+                <input type="text" id="origUnidade" autocomplete="off" placeholder="Unidade de origem..." class="control">
+                <div class="ac-list hidden" id="acOrigUnidade"></div>
+              </div>
+              <div class="form-row ac-wrap">
+                <label for="origEquip">Do equipamento *</label>
+                <input type="text" id="origEquip" autocomplete="off" placeholder="Equipamento de origem..." class="control">
+                <div class="ac-list hidden" id="acOrigEquip"></div>
+              </div>
+              <div class="form-row">
+                <label for="origSerie">Nº de série (origem)</label>
+                <input type="text" id="origSerie" autocomplete="off" placeholder="Automático" class="control">
+              </div>
+            </div>
+          </div>
+          <div class="resolve-hint hidden" id="resolveHint"></div>
           <div class="form-row ac-wrap">
             <label for="movUnidade">Unidade de Destino *</label>
             <input type="text" id="movUnidade" autocomplete="off" placeholder="Digite para buscar a unidade..." class="control">
@@ -1148,17 +1215,13 @@
               <input type="text" id="movSerieDestino" placeholder="Automático quando disponível" class="control" autocomplete="off">
             </div>
           </div>
-          <label class="check-line">
-            <input type="checkbox" id="movGerarComprovante" checked> Gerar comprovante de saída (PDF)
-          </label>
         </div>
 
-        <div class="form-row">
-          <label for="movObs">Observações</label>
-          <input type="text" id="movObs" class="control" maxlength="500" placeholder="Anotações sobre a movimentação (motivo, condição da peça, O.S., etc.)">
-        </div>
 
         <div class="modal-foot">
+          <label class="check-line foot-check exit-only" id="comprovanteLine">
+            <input type="checkbox" id="movGerarComprovante" checked> Gerar comprovante (PDF)
+          </label>
           <button type="button" class="btn btn-soft" onclick="closeModal('movementModal')">Cancelar</button>
           <button type="submit" id="movSubmitBtn" class="btn btn-primary">Registrar</button>
         </div>
@@ -1202,6 +1265,7 @@
           <button type="button" class="mv-chip" data-tipo="Entrada" aria-pressed="true"><span class="dot" style="background:#059669"></span>Entradas</button>
           <button type="button" class="mv-chip" data-tipo="Cadastro" aria-pressed="true"><span class="dot" style="background:#2563eb"></span>Cadastros</button>
           <button type="button" class="mv-chip" data-tipo="Edição" aria-pressed="false"><span class="dot" style="background:#64748b"></span>Edições</button>
+          <button type="button" class="mv-chip mv-chip-pend" id="mvSoPend" aria-pressed="false" title="Mostrar só as peças retiradas de equipamentos que ainda aguardam reposição"><i class="ph ph-warning"></i> Só pendências de reposição</button>
           <input type="search" id="mvBusca" class="control" placeholder="Buscar: equipamento, série, observação…" style="flex:1 1 220px; max-width:340px; min-height:36px; padding:6px 11px">
           <button type="button" class="mv-clear" onclick="limparFiltrosMov()">Limpar filtros</button>
         </div>
@@ -1513,7 +1577,9 @@
        gravadas sem unidade/equipamento e ninguém percebia.
        Agora: testa cada endereço candidato com ?action=versao e usa o primeiro que responde com a versão
        nova (que grava unidade/equipamento). Se nenhum responder assim, mostra um aviso permanente. */
-    const MIN_API_VERSION = 3.6;
+    // versões comparadas por partes: "3.10" é MAIOR que "3.6" (como número decimal seria 3,1 < 3,6)
+    const verNum = v => { const p = String(v || '0').split('.').map(n => parseInt(n, 10) || 0); return p[0] * 1000 + (p[1] || 0); };
+    const MIN_API_VERSION = verNum('3.6');
     let apiInfo = null;        // resposta de ?action=versao do endereço escolhido
     let apiDesatualizada = false;
 
@@ -1524,7 +1590,7 @@
         const res = await fetch(u.toString());
         const json = JSON.parse(await res.text());
         const d = json && json.ok && json.data && !Array.isArray(json.data) ? json.data : null;
-        return { url, ok: true, info: d, versao: d ? parseFloat(d.versao) || 0 : 0 };
+        return { url, ok: true, info: d, versao: d ? verNum(d.versao) : 0 };
       } catch (e) { return { url, ok: false, versao: 0 }; }
     }
 
@@ -1867,17 +1933,30 @@
       else if (action === 'movs') { const it = rawInventoryData.find(i => i.rowIndex === rowIndex); openMovDash(it ? { peca: it.peca } : {}); }
     }
 
-    function openMovementModal(rowIndex, tipo) {
+    function openMovementModal(rowIndex, tipo, pre) {
       const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
       if (!item) return;
+      pre = pre || {};
 
       document.getElementById('movRowIndex').value = rowIndex;
       document.getElementById('movType').value = tipo;
       document.getElementById('movPecaName').innerText = `${item.peca} (${item.equipamento})`;
       document.getElementById('movQty').value = 1;
       document.getElementById('movTecnico').value = '';
-      ['movUnidade','movEquipDestino','movSerieDestino','movObs'].forEach(id => document.getElementById(id).value = '');
+      ['movUnidade','movEquipDestino','movSerieDestino','movObs','origUnidade','origEquip','origSerie','movResolveLinha'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('movSerieDestino').dataset.auto = '1';
+      document.getElementById('origSerie').dataset.auto = '1';
+      definirOrigem('estoque');
+      document.getElementById('comprovanteLine').classList.toggle('hidden', tipo !== 'Saída');
+      // pré-preenchimento (ex.: "Registrar reposição" a partir do painel de movimentações)
+      if (pre.unidade) document.getElementById('movUnidade').value = pre.unidade;
+      if (pre.equipamento) document.getElementById('movEquipDestino').value = pre.equipamento;
+      if (pre.serie) definirSerie(pre.serie, false);
+      if (pre.qtd) document.getElementById('movQty').value = pre.qtd;
+      if (pre.resolveLinha) document.getElementById('movResolveLinha').value = pre.resolveLinha;
+      const rh = document.getElementById('resolveHint');
+      rh.classList.toggle('hidden', !pre.resolveLinha);
+      rh.innerHTML = pre.resolveLinha ? `<i class="ph ph-arrow-u-up-left"></i> <b>Reposição:</b> esta saída repõe a peça retirada em ${escapeHtml(pre.equipamento || '')} (${escapeHtml(pre.unidade || '')}) — a pendência da linha ${pre.resolveLinha} será marcada como resolvida.` : '';
       document.querySelectorAll('.cat-filter input[data-cat]').forEach(c => c.checked = false);
       document.getElementById('catHint').textContent = '';
       document.getElementById('exitFields').classList.toggle('hidden', tipo !== 'Saída');
@@ -1924,96 +2003,120 @@
       const observacoes = document.getElementById('movObs').value.trim();
       const vinc = tipo === 'Saída' ? clienteDaUnidade(unidade, equipDestino) : { cliente: '', cnpj: '' };
       const movItem = rawInventoryData.find(i => i.rowIndex === rowIndex);
+      // origem da peça (v3.14)
+      const deEquip = tipo === 'Saída' && origemAtual() === 'equipamento';
+      const retUn = document.getElementById('origUnidade').value.trim(), retEq = document.getElementById('origEquip').value.trim();
+      if (deEquip) preencherSerieOrigem();
+      const retSerie = deEquip ? (document.getElementById('origSerie').value.trim() || SERIAL_VAZIO) : '';
+      const resolveLinha = parseInt(document.getElementById('movResolveLinha').value) || null;
 
       if (tipo === 'Saída') {
         if (!unidade || !equipDestino) { showToast('Informe a unidade de destino e o equipamento.', 'err'); return; }
-        if (movItem && qtyInput > movItem.quantidade) { showToast(`Saldo insuficiente (disponível: ${movItem.quantidade}).`, 'err'); return; }
+        if (deEquip && (!retUn || !retEq)) { showToast('Informe a unidade e o equipamento de onde a peça foi retirada.', 'err'); document.getElementById(retUn ? 'origEquip' : 'origUnidade').focus(); return; }
+        if (deEquip && normTxt(retUn) === normTxt(unidade) && normTxt(retEq) === normTxt(equipDestino)) { showToast('O equipamento de origem é o mesmo do destino. Confira os dados.', 'err'); return; }
+        if (!deEquip && movItem && qtyInput > movItem.quantidade) { showToast(`Saldo insuficiente (disponível: ${movItem.quantidade}). Se a peça foi retirada de outro equipamento, escolha essa origem.`, 'err'); return; }
         if (!isDemoMode && apiDesatualizada &&
             !confirm('ATENÇÃO: o Apps Script em uso é uma versão antiga e NÃO grava a unidade nem o equipamento de destino no histórico.\n\nO saldo será baixado, mas o destino ficará em branco na aba de histórico.\n\nDeseja continuar mesmo assim?')) return;
       }
       const gerarDoc = tipo === 'Saída' && document.getElementById('movGerarComprovante').checked;
-      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, observacoes, cliente: vinc.cliente, cnpj: vinc.cnpj, dataHora: new Date().toLocaleString('pt-BR') };
+      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, observacoes, cliente: vinc.cliente, cnpj: vinc.cnpj,
+        origem: deEquip ? { unidade: retUn, equipamento: retEq, serie: retSerie } : null, dataHora: new Date().toLocaleString('pt-BR') };
 
       closeModal('movementModal');
-      if (gerarDoc) Progresso.iniciar(); // o operador acompanha do registro até a liberação do PDF
+      const oque = tipo === 'Entrada' ? 'a entrada' : 'a saída';
+      Progresso.iniciar(gerarDoc
+        ? { titulo: 'Registrando saída e gerando comprovante', icone: 'ph-file-pdf', etapas: ETAPAS.saidaPdf(), fim: 'Comprovante pronto — abrindo a pré-visualização…', tituloFalha: 'Não foi possível concluir a saída' }
+        : { titulo: tipo === 'Entrada' ? 'Registrando entrada no estoque' : 'Registrando saída do estoque', icone: tipo === 'Entrada' ? 'ph-arrow-circle-down' : 'ph-arrow-circle-up',
+            etapas: ETAPAS.salvar(oque), fim: `${tipo} registrada — tela liberada.`, tituloFalha: `Não foi possível registrar ${oque}` });
 
       if (isDemoMode) {
+        await pausa(700);
         const item = rawInventoryData.find(i => i.rowIndex === rowIndex);
-        if (item) item.quantidade = Math.max(0, item.quantidade + delta);
-        applyFilters();
+        if (item && !deEquip) item.quantidade = Math.max(0, item.quantidade + delta);
+        Progresso.etapa('confirma'); await pausa(300);
+        Progresso.etapa('tela'); applyFilters(); await pausa(300);
+        if (gerarDoc) await gerarComprovanteSaida(docData, Progresso); else await Progresso.concluir();
         showToast(`Operação de ${tipo} registrada (demonstração).`, 'ok');
-        if (gerarDoc) { Progresso.etapa(1); await gerarComprovanteSaida(docData, Progresso); }
         return;
       }
 
+      let r;
       try {
-        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino, observacoes: observacoes, clienteDestino: vinc.cliente, cnpjDestino: vinc.cnpj });
-        movData = null; // o painel de movimentações relê o histórico na próxima abertura
-        if (gerarDoc) Progresso.etapa(1, r.unconfirmed ? 'Servidor não confirmou a gravação — confira a planilha depois.' : '');
-        const d = r.data || {};
-        if (r.unconfirmed) {
-          showToast(`Operação de ${tipo} enviada, mas o servidor não confirmou a gravação. Verifique a planilha.`, 'err');
-        } else if (d.aviso) {
-          showToast(d.aviso, 'err');
-        } else if (tipo === 'Saída' && d.unidadeGravada === undefined) {
-          apiDesatualizada = true;
-          atualizarAvisoApi(); // aviso permanente (o toast some em 3 s e passava despercebido)
-          showToast('Saldo baixado, mas o Apps Script em uso é ANTIGO e não gravou unidade/equipamento. Veja o aviso no topo do painel.', 'err');
-        } else if (tipo === 'Saída' && d.historico) {
-          showToast(`Saída salva na planilha "${d.planilha || '?'}" › aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
-        } else {
-          showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
-        }
-        if (observacoes && !r.unconfirmed && d.observacaoGravada === undefined) {
-          setTimeout(() => showToast('Movimentação salva, mas o Apps Script em uso ainda não grava as Observações (publique a versão 3.7 do script).', 'err'), 3800);
-        }
-        if (gerarDoc) await gerarComprovanteSaida(docData, Progresso);
-        setTimeout(fetchData, 1200);
+        r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico,
+          unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino, observacoes: observacoes,
+          clienteDestino: vinc.cliente, cnpjDestino: vinc.cnpj,
+          origem: deEquip ? 'equipamento' : 'estoque', retiradaUnidade: deEquip ? retUn : '', retiradaEquipamento: deEquip ? retEq : '', retiradaSerie: retSerie,
+          resolveLinha: resolveLinha });
       } catch (err) {
-        if (gerarDoc && Progresso.ativo) Progresso.falhar('Erro ao salvar a operação: ' + (err.message || err) + ' — o comprovante não foi gerado.');
+        Progresso.falhar('Erro ao salvar: ' + (err.message || err) + (gerarDoc ? ' — o comprovante não foi gerado.' : '') + ' Nada foi alterado no estoque.');
         showToast('Erro ao salvar operação: ' + (err.message || err), 'err');
+        return;
       }
+      movData = null; // o painel de movimentações relê o histórico na próxima abertura
+      const d = r.data || {};
+      Progresso.etapa('confirma', r.unconfirmed ? 'O servidor não confirmou a gravação — confira a planilha depois.' : '');
+      await pausa(250);
+      let aviso = '';
+      if (r.unconfirmed) aviso = `Operação de ${tipo} enviada, mas o servidor não confirmou a gravação. Verifique a planilha.`;
+      else if (d.aviso) aviso = d.aviso;
+      else if (tipo === 'Saída' && d.unidadeGravada === undefined) {
+        apiDesatualizada = true; atualizarAvisoApi();
+        aviso = 'Saldo baixado, mas o Apps Script em uso é ANTIGO e não gravou unidade/equipamento. Veja o aviso no topo do painel.';
+      } else if (deEquip && d.origem !== 'equipamento') {
+        aviso = 'ATENÇÃO: o Apps Script em uso é anterior à versão 3.10 — a origem "retirada de equipamento" não foi gravada e o saldo foi baixado. Publique a nova versão do script.';
+      }
+      if (observacoes && !r.unconfirmed && d.observacaoGravada === undefined) aviso = aviso || 'Movimentação salva, mas o Apps Script em uso ainda não grava as Observações.';
+
+      Progresso.etapa('tela');
+      try { await fetchData(true); } catch (e) {}
+
+      if (gerarDoc) await gerarComprovanteSaida(docData, Progresso);
+      else await Progresso.concluir();
+
+      if (aviso) showToast(aviso, 'err');
+      else if (tipo === 'Saída' && d.historico) showToast(deEquip
+        ? `Saída registrada sem baixar o estoque — reposição pendente em ${retEq} (${retUn}). Linha ${d.historico.linha}.`
+        : `Saída salva na planilha "${d.planilha || '?'}" › aba "${d.historico.aba}", linha ${d.historico.linha}.`, 'ok');
+      else showToast(`Operação de ${tipo} salva com sucesso!`, 'ok');
+      if (resolveLinha && !aviso) setTimeout(() => showToast('Pendência de reposição marcada como resolvida.', 'ok'), 3700);
     }
 
     /* ==================== PROGRESSO DO COMPROVANTE (PDF) ====================
        Etapas reais: cada uma tem uma faixa de %; enquanto a etapa espera (ex.: resposta do Google),
        a barra avança devagar dentro da faixa, sem nunca passar do limite — e salta quando a etapa termina. */
     const Progresso = {
-      etapas: [
-        { txt: 'Registrando a saída na planilha',            de: 0,  ate: 55 },
-        { txt: 'Confirmando a gravação no histórico',         de: 55, ate: 65 },
-        { txt: 'Montando o comprovante (peça, destino, responsável)', de: 65, ate: 85 },
-        { txt: 'Gerando o arquivo PDF',                       de: 85, ate: 97 },
-        { txt: 'Documento liberado',                          de: 100, ate: 100 }
-      ],
-      ativo: false, atual: 0, pct: 0, t0: 0, timer: null,
+      etapas: [], ativo: false, atual: -1, pct: 0, t0: 0, timer: null, cfg: {},
       el: id => document.getElementById(id),
-      iniciar() {
+      /* cfg = { titulo, icone, etapas:[{k, txt, de, ate}], fim: 'mensagem ao concluir', tituloFalha } */
+      iniciar(cfg) {
+        this.cfg = cfg || {};
+        this.etapas = this.cfg.etapas || ETAPAS.salvar('movimentação');
         this.ativo = true; this.atual = -1; this.pct = 0; this.t0 = performance.now();
         this.el('progSteps').innerHTML = this.etapas.map((e, i) => `<li data-i="${i}"><span class="dot" aria-hidden="true"></span><span>${e.txt}</span></li>`).join('');
         this.el('progBar').className = 'prog-bar';
         this.el('progFoot').classList.add('hidden');
-        this.el('progTitle').innerHTML = '<i class="ph ph-file-pdf"></i> Gerando comprovante de saída';
+        this.el('progTitle').innerHTML = `<i class="ph ${this.cfg.icone || 'ph-floppy-disk'}"></i> ${escapeHtml(this.cfg.titulo || 'Salvando na planilha')}`;
+        this.render(0);
         openModal('progressModal');
-        this.etapa(0);
+        this.etapa(this.etapas[0].k);
         clearInterval(this.timer);
         this.timer = setInterval(() => this.tique(), 100);
       },
+      idx(k) { const i = this.etapas.findIndex(e => e.k === k); return i < 0 ? this.atual : i; },
       tique() {
         const e = this.etapas[this.atual]; if (!e) return;
-        if (this.pct < e.ate - 0.5) this.render(this.pct + Math.max(0.08, (e.ate - this.pct) * 0.035)); // aproximação suave do limite da etapa
+        if (this.pct < e.ate - 0.5) this.render(this.pct + Math.max(0.08, (e.ate - this.pct) * 0.035)); // avança devagar sem passar do limite da etapa
         this.el('progTime').textContent = 'Tempo decorrido: ' + ((performance.now() - this.t0) / 1000).toFixed(1).replace('.', ',') + ' s';
       },
-      etapa(i, obs) {
+      etapa(k, obs) {
         if (!this.ativo) return;
-        for (let k = 0; k < this.etapas.length; k++) {
-          const li = this.el('progSteps').children[k]; if (!li) continue;
-          li.className = k < i ? 'done' : k === i ? 'active' : '';
-        }
+        const i = typeof k === 'number' ? k : this.idx(k);
+        [...this.el('progSteps').children].forEach((li, n) => { li.className = n < i ? 'done' : n === i ? 'active' : ''; });
         this.atual = i;
         this.render(Math.max(this.pct, this.etapas[i].de));
         this.el('progMsg').textContent = obs || (this.etapas[i].txt + '…');
       },
+      msg(t) { if (this.ativo) this.el('progMsg').textContent = t; },
       render(p) {
         this.pct = Math.min(100, p);
         const v = Math.floor(this.pct);
@@ -2021,15 +2124,15 @@
         this.el('progPct').textContent = v + '%';
         this.el('progBar').setAttribute('aria-valuenow', v);
       },
-      async concluir() {
+      async concluir(msgFinal) {
         if (!this.ativo) return;
         this.etapa(this.etapas.length - 1);
-        this.el('progSteps').lastElementChild.className = 'done';
+        [...this.el('progSteps').children].forEach(li => li.className = 'done');
         this.render(100); this.tique();
         this.el('progBar').className = 'prog-bar done';
-        this.el('progMsg').textContent = 'Comprovante pronto — abrindo a pré-visualização…';
+        this.el('progMsg').textContent = msgFinal || this.cfg.fim || 'Concluído.';
         clearInterval(this.timer);
-        await new Promise(r => setTimeout(r, 650)); // tempo para o operador ver o 100%
+        await new Promise(r => setTimeout(r, 700)); // tempo para o operador ver o 100%
         this.ativo = false;
         document.getElementById('progressModal').classList.add('hidden');
       },
@@ -2038,12 +2141,29 @@
         const li = this.el('progSteps').children[Math.max(0, this.atual)];
         if (li) li.className = 'fail';
         this.el('progBar').className = 'prog-bar fail';
-        this.el('progTitle').innerHTML = '<i class="ph ph-warning-circle"></i> Não foi possível gerar o comprovante';
+        this.el('progTitle').innerHTML = `<i class="ph ph-warning-circle"></i> ${escapeHtml(this.cfg.tituloFalha || 'Não foi possível concluir')}`;
         this.el('progMsg').textContent = msg;
         this.el('progFoot').classList.remove('hidden');
         this.ativo = false;
       },
       fechar() { clearInterval(this.timer); this.ativo = false; document.getElementById('progressModal').classList.add('hidden'); }
+    };
+    /* Roteiros de etapas (faixas de % de cada etapa) */
+    const ETAPAS = {
+      salvar: (oque) => [
+        { k: 'envio', txt: `Enviando ${oque} à planilha`, de: 0, ate: 60 },
+        { k: 'confirma', txt: 'Confirmando a gravação', de: 60, ate: 72 },
+        { k: 'tela', txt: 'Atualizando o estoque na tela', de: 72, ate: 97 },
+        { k: 'fim', txt: 'Concluído — tela liberada', de: 100, ate: 100 }
+      ],
+      saidaPdf: () => [
+        { k: 'envio', txt: 'Registrando a saída na planilha', de: 0, ate: 45 },
+        { k: 'confirma', txt: 'Confirmando a gravação no histórico', de: 45, ate: 55 },
+        { k: 'tela', txt: 'Atualizando o estoque na tela', de: 55, ate: 70 },
+        { k: 'pdf_montar', txt: 'Montando o comprovante (peça, destino, responsável)', de: 70, ate: 86 },
+        { k: 'pdf_gerar', txt: 'Gerando o arquivo PDF', de: 86, ate: 97 },
+        { k: 'fim', txt: 'Documento liberado', de: 100, ate: 100 }
+      ]
     };
     const pausa = ms => new Promise(r => requestAnimationFrame(() => setTimeout(r, ms))); // deixa a tela atualizar entre etapas
 
@@ -2250,6 +2370,45 @@
       sEl.addEventListener('focus', () => { if (sEl.value === SERIAL_VAZIO) sEl.select(); });
     }
 
+    /* ---- Origem da peça: estoque × retirada de outro equipamento (v3.14) ---- */
+    function origemAtual() { const r = document.querySelector('input[name="movOrigem"]:checked'); return r ? r.value : 'estoque'; }
+    function definirOrigem(v) {
+      document.querySelectorAll('input[name="movOrigem"]').forEach(r => r.checked = r.value === v);
+      document.getElementById('origemBox').classList.toggle('hidden', v !== 'equipamento');
+    }
+    function preencherSerieOrigem(force) {
+      const el = document.getElementById('origSerie');
+      if (!force && el.dataset.auto === '0' && el.value.trim()) return;
+      const un = document.getElementById('origUnidade').value, eq = document.getElementById('origEquip').value;
+      if (!eq.trim()) { if (el.dataset.auto !== '0') el.value = ''; return; }
+      const achados = buscarEquip(un, eq), c = achados.find(u => u.serie);
+      el.value = c ? c.serie : SERIAL_VAZIO; el.dataset.auto = '1';
+      if (!un.trim() && achados.length) document.getElementById('origUnidade').value = achados[0].unidade;
+    }
+    function initOrigemAutocomplete() {
+      document.querySelectorAll('input[name="movOrigem"]').forEach(r => r.addEventListener('change', () => {
+        definirOrigem(origemAtual());
+        if (origemAtual() === 'equipamento') { loadUnidades(); setTimeout(() => document.getElementById('origUnidade').focus(), 50); }
+      }));
+      setupAutocomplete('origUnidade', 'acOrigUnidade', () => {
+        const map = {}; (unidadesData || []).forEach(u => { map[u.unidade] = (map[u.unidade] || 0) + (u.equipamento ? 1 : 0); });
+        return Object.keys(map).map(k => ({ label: k, sub: `${map[k]} equipamento(s)` }));
+      }, () => { const eq = document.getElementById('origEquip'); if (!buscarEquip(document.getElementById('origUnidade').value, eq.value).length) { eq.value = ''; document.getElementById('origSerie').value = ''; } eq.focus(); });
+      setupAutocomplete('origEquip', 'acOrigEquip', () => {
+        const un = normTxt(document.getElementById('origUnidade').value);
+        return (unidadesData || []).filter(u => u.equipamento && (!un || normTxt(u.unidade) === un))
+          .map(u => ({ label: u.equipamento, sub: [u.serie && `Série: ${u.serie}`, !un && u.unidade].filter(Boolean).join(' · '), data: u }));
+      }, o => {
+        const el = document.getElementById('origSerie'); el.value = o.data.serie || SERIAL_VAZIO; el.dataset.auto = '1';
+        if (!document.getElementById('origUnidade').value) document.getElementById('origUnidade').value = o.data.unidade;
+      });
+      document.getElementById('origEquip').addEventListener('change', () => preencherSerieOrigem(false));
+      const os = document.getElementById('origSerie');
+      os.addEventListener('input', () => { os.dataset.auto = os.value.trim() ? '0' : '1'; });
+      os.addEventListener('focus', () => { if (os.value === SERIAL_VAZIO) os.select(); });
+    }
+    document.addEventListener('DOMContentLoaded', initOrigemAutocomplete);
+
     /* ---- Nº de série do equipamento de destino (v3.8) ---- */
     const SERIAL_VAZIO = 'Serial não localizado';
     function buscarEquip(unidade, equip) {
@@ -2356,6 +2515,7 @@
         const vinc = r.unidadeDestino ? clienteDaUnidade(r.unidadeDestino, r.equipamentoDestino) : { cliente: '', cnpj: '' };
         return { ...r, tipo, qtd, dt: parseDataMov(r.data),
           cliente: r.clienteDestino || vinc.cliente, cnpj: r.cnpjDestino || vinc.cnpj,
+          remanejada: normTxt(r.origemPeca).startsWith('retirada'), pendente: normTxt(r.reposicao) === 'pendente', reposta: normTxt(r.reposicao).startsWith('reposta'),
           sinal: tipo === 'Saída' ? -1 : (tipo === 'Entrada' || tipo === 'Cadastro') ? 1 : 0 };
       });
     }
@@ -2376,7 +2536,8 @@
       document.getElementById('mvCliente').addEventListener('change', () => { preencherOpcoesMov(); re(); });
       ['mvUnidade', 'mvPeca', 'mvTecnico'].forEach(id => document.getElementById(id).addEventListener('change', re));
       document.getElementById('mvBusca').addEventListener('input', re);
-      document.querySelectorAll('#mvTipos .mv-chip').forEach(c => c.addEventListener('click', () => { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); re(); }));
+      document.getElementById('mvSoPend').addEventListener('click', e => { const b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); re(); });
+      document.querySelectorAll('#mvTipos .mv-chip[data-tipo]').forEach(c => c.addEventListener('click', () => { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); re(); }));
     }
     function aplicarPeriodo(p) {
       const h = new Date(), de = document.getElementById('mvDe'), ate = document.getElementById('mvAte');
@@ -2391,7 +2552,8 @@
     function limparFiltrosMov() {
       ['mvCliente', 'mvUnidade', 'mvPeca', 'mvTecnico', 'mvBusca', 'mvDe', 'mvAte'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('mvPeriodo').value = 'tudo';
-      document.querySelectorAll('#mvTipos .mv-chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.tipo === 'Edição' ? 'false' : 'true'));
+      document.querySelectorAll('#mvTipos .mv-chip[data-tipo]').forEach(c => c.setAttribute('aria-pressed', c.dataset.tipo === 'Edição' ? 'false' : 'true'));
+      document.getElementById('mvSoPend').setAttribute('aria-pressed', 'false');
       preencherOpcoesMov(); movLimite = 200; renderMov();
     }
     function preencherOpcoesMov() {
@@ -2412,10 +2574,12 @@
     function filtrarMovs() {
       const v = id => document.getElementById(id).value;
       const de = v('mvDe') ? new Date(v('mvDe') + 'T00:00:00') : null, ate = v('mvAte') ? new Date(v('mvAte') + 'T23:59:59') : null;
-      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[aria-pressed="true"]')].map(c => c.dataset.tipo);
+      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[data-tipo][aria-pressed="true"]')].map(c => c.dataset.tipo);
+      const soPend = document.getElementById('mvSoPend').getAttribute('aria-pressed') === 'true';
       const cli = v('mvCliente'), un = v('mvUnidade'), pc = v('mvPeca'), tec = v('mvTecnico');
       const termos = normTxt(v('mvBusca')).split(/\s+/).filter(Boolean);
       return (movData || []).filter(m => {
+        if (soPend && !m.pendente) return false;
         if (!tipos.includes(m.tipo) && MOV_TIPOS.includes(m.tipo)) return false;
         if (de && (!m.dt || m.dt < de)) return false;
         if (ate && (!m.dt || m.dt > ate)) return false;
@@ -2424,7 +2588,7 @@
         if (pc && m.peca !== pc) return false;
         if (tec && m.tecnico !== tec) return false;
         if (termos.length) {
-          const t = normTxt([m.peca, m.equipamento, m.unidadeDestino, m.equipamentoDestino, m.serie, m.observacoes, m.tecnico, m.cliente, m.cnpj].join(' '));
+          const t = normTxt([m.peca, m.equipamento, m.unidadeDestino, m.equipamentoDestino, m.serie, m.observacoes, m.tecnico, m.cliente, m.cnpj, m.retiradaUnidade, m.retiradaEquipamento, m.retiradaSerie, m.reposicao].join(' '));
           if (!termos.every(x => t.includes(x))) return false;
         }
         return true;
@@ -2441,6 +2605,7 @@
       const soma = l => l.reduce((a, m) => a + m.qtd, 0);
       const unidades = new Set(said.map(m => m.unidadeDestino).filter(Boolean)).size;
       const pecas = new Set(d.map(m => m.peca).filter(Boolean)).size;
+      const pendTodas = (movData || []).filter(m => m.pendente).length;
       const kpi = (l, v, sub) => `<div class="mv-kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
       const top = (lista, chave, filtro) => {
         const c = {}; lista.forEach(m => { const k = m[chave]; if (k) c[k] = (c[k] || 0) + m.qtd; });
@@ -2468,7 +2633,7 @@
       const th = (k, l) => `<th data-k="${k}" aria-sort="${movSort.k === k ? (movSort.d > 0 ? 'ascending' : 'descending') : 'none'}">${l}${movSort.k === k ? (movSort.d > 0 ? ' ↑' : ' ↓') : ''}</th>`;
       const linhas = ord.slice(0, movLimite).map(m => `<tr tabindex="0" data-l="${m.linha}">
           <td style="white-space:nowrap">${fmtDataHora(m.dt)}</td>
-          <td>${badge(m.tipo)}</td>
+          <td>${badge(m.tipo)}${m.remanejada ? `<span class="mv-tag ${m.pendente ? 'pend' : m.reposta ? 'ok' : ''}" title="Retirada de ${escapeHtml(m.retiradaEquipamento)} (${escapeHtml(m.retiradaUnidade)})">${m.pendente ? 'Reposição pendente' : m.reposta ? 'Reposta' : 'Remanejada'}</span>` : ''}</td>
           <td><b>${escapeHtml(m.peca || '—')}</b><span class="sub">${escapeHtml(m.equipamento || '')}</span></td>
           <td class="qtd ${m.sinal > 0 ? 'pos' : m.sinal < 0 ? 'neg' : ''}">${m.sinal > 0 ? '+' : m.sinal < 0 ? '−' : ''}${m.qtd}</td>
           <td>${m.unidadeDestino ? escapeHtml(m.unidadeDestino) : '<span class="sub">—</span>'}${m.cliente ? `<span class="sub">${escapeHtml(m.cliente)}${m.cnpj ? ' · CNPJ ' + escapeHtml(m.cnpj) : ''}</span>` : ''}</td>
@@ -2479,10 +2644,11 @@
       box.innerHTML = `
         <div class="mv-kpis">
           ${kpi('Movimentações', d.length, `${said.length} saída(s) · ${entr.length} entrada(s)`)}
-          ${kpi('Peças retiradas', soma(said), 'quantidade total em saídas')}
+          ${kpi('Peças retiradas', soma(said), said.some(m => m.remanejada) ? `${soma(said.filter(m => m.remanejada))} remanejada(s) de equipamentos` : 'quantidade total em saídas')}
           ${kpi('Peças recebidas', soma(entr), 'entradas + cadastros')}
           ${kpi('Unidades atendidas', unidades, 'com ao menos uma saída')}
           ${kpi('Peças diferentes', pecas, 'tipos movimentados')}
+          <button type="button" class="mv-kpi mv-kpi-pend${pendTodas ? ' tem' : ''}" id="mvKpiPend" title="Clique para ver só as pendências de reposição"><div class="l">Reposições pendentes</div><div class="v">${pendTodas}</div><div class="s">${pendTodas ? 'equipamentos aguardando a peça' : 'nenhuma pendência'}</div></button>
         </div>
         <div class="mv-charts">
           <div class="mv-card"><h4>Entradas e saídas por mês <small>quantidade</small></h4>${meses}</div>
@@ -2494,6 +2660,8 @@
           <tbody>${linhas || '<tr><td colspan="7" class="mv-status" style="cursor:default">Nenhuma movimentação com os filtros atuais.</td></tr>'}</tbody></table>
         </div>${ord.length > movLimite ? `<div class="mv-more"><button type="button" class="btn btn-soft" id="mvMais">Mostrar mais ${Math.min(200, ord.length - movLimite)} de ${ord.length - movLimite} restantes</button></div>` : ''}</div>`;
 
+      const kp = document.getElementById('mvKpiPend');
+      if (kp) kp.onclick = () => { const b = document.getElementById('mvSoPend'); b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); movLimite = 200; renderMov(); };
       box.querySelectorAll('.mv-bar').forEach(b => b.onclick = () => { setSelectValor(b.dataset.f, b.dataset.v); movLimite = 200; renderMov(); });
       box.querySelectorAll('thead th[data-k]').forEach(t => t.onclick = () => { const k = t.dataset.k; movSort = { k, d: movSort.k === k ? -movSort.d : (k === 'data' ? -1 : 1) }; renderMov(); });
       box.querySelectorAll('tbody tr[data-l]').forEach(tr => {
@@ -2519,6 +2687,9 @@
         ${linha('Unidade de destino', escapeHtml(m.unidadeDestino))}
         ${linha('Equipamento na unidade', escapeHtml(m.equipamentoDestino))}
         ${linha('Nº de série / Patrimônio', escapeHtml(m.serie))}
+        ${m.remanejada ? linha('Origem da peça', '<b>Retirada de outro equipamento</b> (não baixou o estoque)') : (m.tipo === 'Saída' && m.origemPeca ? linha('Origem da peça', 'Estoque') : '')}
+        ${m.remanejada ? linha('Retirada de', `${escapeHtml(m.retiradaEquipamento)} · ${escapeHtml(m.retiradaUnidade)}${m.retiradaSerie ? ' · Série ' + escapeHtml(m.retiradaSerie) : ''}`) : ''}
+        ${m.remanejada ? linha('Reposição', m.pendente ? '<span class="mv-tag pend">Pendente</span>' : escapeHtml(m.reposicao)) : ''}
         ${linha('Técnico responsável', escapeHtml(m.tecnico))}
         ${linha('Observações', escapeHtml(m.observacoes))}
         ${linha('Linha na planilha', 'Historico_Movimentacoes · linha ' + m.linha)}
@@ -2529,6 +2700,7 @@
         ${m.cliente ? `<button type="button" class="mv-chip" data-pf="cliente">Todas deste cliente</button>` : ''}
       </div>`;
       document.getElementById('mvdFoot').innerHTML = `<button type="button" class="btn btn-soft" onclick="closeModal('movDetailModal')">Fechar</button>` +
+        (m.pendente ? `<button type="button" class="btn btn-success" id="mvdRepor" title="Abre a baixa já preenchida para repor a peça no equipamento de origem"><i class="ph ph-arrow-u-up-left"></i> Registrar reposição</button>` : '') +
         (m.tipo === 'Saída' ? `<button type="button" class="btn btn-primary" id="mvdComprovante"><i class="ph ph-file-pdf"></i> Reemitir comprovante</button>` : '');
       document.querySelectorAll('#mvdBody [data-pf]').forEach(b => b.onclick = () => {
         const f = b.dataset.pf; closeModal('movDetailModal');
@@ -2541,16 +2713,33 @@
       if (bc) bc.onclick = () => {
         const inv = rawInventoryData.find(i => i.peca === m.peca && (!m.equipamento || i.equipamento === m.equipamento)) || {};
         gerarComprovanteSaida({
-          item: { peca: m.peca, equipamento: m.equipamento, categoria: inv.categoria || '', quantidade: (m.saldo !== null && m.saldo !== undefined ? Number(m.saldo) : 0) + m.qtd },
+          item: { peca: m.peca, equipamento: m.equipamento, categoria: inv.categoria || '', quantidade: (m.saldo !== null && m.saldo !== undefined ? Number(m.saldo) : 0) + (m.remanejada ? 0 : m.qtd) },
+          origem: m.remanejada ? { unidade: m.retiradaUnidade, equipamento: m.retiradaEquipamento, serie: m.retiradaSerie } : null,
           qtd: m.qtd, tecnico: m.tecnico, unidade: m.unidadeDestino, equipDestino: m.equipamentoDestino, serieDestino: m.serie || SERIAL_VAZIO,
           observacoes: m.observacoes, cliente: m.cliente, cnpj: m.cnpj, dataHora: fmtDataHora(m.dt) + ' (2ª via)'
         });
       };
+      const br = document.getElementById('mvdRepor');
+      if (br) br.onclick = () => {
+        const inv = rawInventoryData.find(i => i.peca === m.peca && (!m.equipamento || i.equipamento === m.equipamento)) || rawInventoryData.find(i => i.peca === m.peca);
+        if (!inv) { showToast('Esta peça não está mais na lista de estoque — cadastre-a para registrar a reposição.', 'err'); return; }
+        closeModal('movDetailModal'); closeModal('movDashModal');
+        openMovementModal(inv.rowIndex, 'Saída', { unidade: m.retiradaUnidade, equipamento: m.retiradaEquipamento, serie: m.retiradaSerie && m.retiradaSerie !== SERIAL_VAZIO ? m.retiradaSerie : '', qtd: m.qtd, resolveLinha: m.linha });
+        if (inv.quantidade < m.qtd) showToast(`Atenção: saldo atual de "${inv.peca}" é ${inv.quantidade}. Dê entrada da peça antes de registrar a reposição.`, 'err');
+      };
       openModal('movDetailModal');
     }
 
-    function exportMovPdf() {
+    async function exportMovPdf() {
       if (!movFiltrada.length) { showToast('Não há movimentações no filtro atual para exportar.', 'err'); return; }
+      const btn = document.querySelector('button[onclick="exportMovPdf()"]'), html0 = btn.innerHTML;
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner spin"></i> Gerando…';
+      await pausa(60); // deixa a tela mostrar "Gerando…" antes do trabalho pesado
+      try { montarMovPdf(); showToast(`Relatório pronto (${movFiltrada.length} movimentações) — confira na pré-visualização.`, 'ok'); }
+      catch (e) { showToast('Falha ao gerar o PDF: ' + (e.message || e), 'err'); }
+      finally { btn.disabled = false; btn.innerHTML = html0; }
+    }
+    function montarMovPdf() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const said = movFiltrada.filter(m => m.tipo === 'Saída'), entr = movFiltrada.filter(m => m.sinal > 0), soma = l => l.reduce((a, m) => a + m.qtd, 0);
@@ -2561,7 +2750,7 @@
       doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 283, 13, { align: 'right' });
       const v = id => document.getElementById(id).value;
       const per = v('mvDe') || v('mvAte') ? `${v('mvDe') ? new Date(v('mvDe') + 'T00:00').toLocaleDateString('pt-BR') : 'início'} a ${v('mvAte') ? new Date(v('mvAte') + 'T00:00').toLocaleDateString('pt-BR') : 'hoje'}` : 'Todo o período';
-      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[aria-pressed="true"]')].map(c => c.dataset.tipo).join(', ');
+      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[data-tipo][aria-pressed="true"]')].map(c => c.dataset.tipo).join(', ') + (document.getElementById('mvSoPend').getAttribute('aria-pressed') === 'true' ? ' (só pendências de reposição)' : '');
       doc.setFontSize(9); doc.setTextColor(60, 60, 60);
       doc.text(`Período: ${per}  |  Tipos: ${tipos}  |  Cliente: ${v('mvCliente') || 'Todos'}  |  Unidade: ${v('mvUnidade') || 'Todas'}  |  Peça: ${v('mvPeca') || 'Todas'}  |  Técnico: ${v('mvTecnico') || 'Todos'}${v('mvBusca') ? '  |  Busca: ' + v('mvBusca') : ''}`, 14, 29, { maxWidth: 269 });
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(27, 54, 93);
@@ -2570,7 +2759,7 @@
       doc.autoTable({
         startY: 40, theme: 'striped',
         head: [['Data/Hora', 'Tipo', 'Peça', 'Equip. origem', 'Qtd', 'Cliente / CNPJ', 'Unidade destino', 'Equip. destino', 'Série', 'Técnico', 'Observações']],
-        body: ord.map(m => [fmtDataHora(m.dt), m.tipo, m.peca, m.equipamento, (m.sinal > 0 ? '+' : m.sinal < 0 ? '-' : '') + m.qtd, [m.cliente, m.cnpj].filter(Boolean).join('\nCNPJ '), m.unidadeDestino, m.equipamentoDestino, m.serie, m.tecnico, m.observacoes]),
+        body: ord.map(m => [fmtDataHora(m.dt), m.tipo, m.peca, m.equipamento, (m.sinal > 0 ? '+' : m.sinal < 0 ? '-' : '') + m.qtd, [m.cliente, m.cnpj].filter(Boolean).join('\nCNPJ '), m.unidadeDestino, m.equipamentoDestino, m.serie, m.tecnico, [m.remanejada ? `[Remanejada de ${m.retiradaEquipamento} (${m.retiradaUnidade}) — ${m.pendente ? 'reposição PENDENTE' : (m.reposicao || 'remanejada')}]` : '', m.observacoes].filter(Boolean).join(' ')]),
         headStyles: { fillColor: [44, 62, 80], fontSize: 7.5 }, bodyStyles: { fontSize: 7.2, textColor: [40, 40, 40] }, styles: { cellPadding: 1.6 },
         columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 14 }, 2: { cellWidth: 34, fontStyle: 'bold' }, 3: { cellWidth: 22 }, 4: { cellWidth: 9, halign: 'center' }, 5: { cellWidth: 34 }, 6: { cellWidth: 30 }, 7: { cellWidth: 28 }, 8: { cellWidth: 18 }, 9: { cellWidth: 20 }, 10: { cellWidth: 37 } },
         margin: { left: 14, right: 14 },
@@ -2584,7 +2773,7 @@
     async function gerarComprovanteSaida(d, prog) {
       const P = prog && prog.ativo ? prog : null;
       try {
-      if (P) { await pausa(350); P.etapa(2); await pausa(200); }
+      if (P) { await pausa(250); P.etapa('pdf_montar'); await pausa(200); }
       if (!window.jspdf) throw new Error('a biblioteca de PDF não carregou (verifique a conexão)');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -2610,16 +2799,22 @@
       let y = section('PEÇA / INSUMO', [
         ['Peça', it.peca || ''], ['Equipamento de origem (estoque)', it.equipamento || ''],
         ['Categoria', it.categoria || ''], ['Quantidade retirada', String(d.qtd)],
-        ['Saldo após a saída', String(Math.max(0, (parseInt(it.quantidade) || 0) - d.qtd))]
+        ['Origem da peça', d.origem ? 'Retirada de outro equipamento (não baixou o estoque)' : 'Estoque'],
+        ['Saldo após a saída', String(d.origem ? (parseInt(it.quantidade) || 0) : Math.max(0, (parseInt(it.quantidade) || 0) - d.qtd))]
       ], 34);
-      if (P) { P.el('progMsg').textContent = 'Montando o comprovante: destino…'; await pausa(180); }
+      if (P) { P.msg('Montando o comprovante: destino…'); await pausa(180); }
       y = section('DESTINO', [
         ...(d.cliente ? [['Cliente', d.cliente + (d.cnpj ? '  ·  CNPJ ' + d.cnpj : '')]] : []),
         ['Unidade de destino', d.unidade], ['Equipamento na unidade', d.equipDestino],
         ['Nº de série / Patrimônio', d.serieDestino || SERIAL_VAZIO]
       ], y);
       if (d.observacoes) y = section('OBSERVAÇÕES', [['Observações', d.observacoes]], y);
-      if (P) { P.el('progMsg').textContent = 'Montando o comprovante: responsável e assinaturas…'; await pausa(180); }
+      if (d.origem) y = section('ORIGEM DA PEÇA — REPOSIÇÃO PENDENTE', [
+        ['Retirada de (unidade)', d.origem.unidade], ['Retirada de (equipamento)', d.origem.equipamento],
+        ['Nº de série / Patrimônio', d.origem.serie || SERIAL_VAZIO],
+        ['Situação', 'Peça remanejada (não saiu do estoque). O equipamento de origem aguarda reposição.']
+      ], y);
+      if (P) { P.msg('Montando o comprovante: responsável e assinaturas…'); await pausa(180); }
       y = section('RESPONSÁVEL', [['Técnico responsável', d.tecnico], ['Data / Hora', d.dataHora]], y);
 
       y += 22;
@@ -2631,7 +2826,7 @@
       doc.setFontSize(8); doc.setTextColor(150, 150, 150);
       doc.text('Sistema de Gestão de Estoque - Hospitalar & Laboratorial', 14, 287);
 
-      if (P) { P.etapa(3); await pausa(200); }
+      if (P) { P.etapa('pdf_gerar'); await pausa(200); }
       const blob = doc.output('blob');
       if (P) await P.concluir();
       showPdfPreview(doc, `Comprovante_Saida_${(it.peca || 'peca').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '_').slice(0, 30)}_${num}.pdf`, blob);
@@ -2785,8 +2980,11 @@
       };
 
       closeModal('itemFormModal');
+      Progresso.iniciar({ titulo: mode === 'create' ? 'Cadastrando nova peça' : 'Salvando alterações da peça', icone: 'ph-floppy-disk',
+        etapas: ETAPAS.salvar(mode === 'create' ? 'o cadastro' : 'as alterações'), fim: 'Registro salvo — tela liberada.', tituloFalha: 'Não foi possível salvar' });
 
       if (isDemoMode) {
+        await pausa(600);
         if (mode === 'create') {
           const nextIndex = rawInventoryData.reduce((m, i) => Math.max(m, i.rowIndex), 1) + 1;
           rawInventoryData.push(normalizeItem({ ...itemPayload, rowIndex: nextIndex }));
@@ -2796,6 +2994,7 @@
         }
         populateEquipFilter();
         applyFilters();
+        await Progresso.concluir();
         btn.disabled = false;
         showToast('Registro salvo (demonstração).', 'ok');
         return;
@@ -2804,9 +3003,14 @@
       try {
         const r = await postApi(payload);
         movData = null;
+        Progresso.etapa('confirma', r.unconfirmed ? 'O servidor não confirmou a gravação — confira a planilha depois.' : '');
+        await pausa(250);
+        Progresso.etapa('tela');
+        try { await fetchData(true); } catch (e) {}
+        await Progresso.concluir();
         showToast(r.unconfirmed ? 'Registro enviado, mas o servidor não confirmou a gravação. Verifique a planilha.' : 'Registro salvo com sucesso!', r.unconfirmed ? 'err' : 'ok');
-        setTimeout(fetchData, 1200);
       } catch (err) {
+        Progresso.falhar('Erro ao salvar: ' + (err.message || err));
         showToast('Erro ao salvar: ' + (err.message || err), 'err');
       } finally {
         btn.disabled = false;
