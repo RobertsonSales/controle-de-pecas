@@ -751,7 +751,7 @@
     .modal input.control:focus, .modal select.control:focus, .modal textarea.control:focus {
       border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
     }
-    .modal select.control { background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; }
+    .modal select.control { background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; padding-right: 32px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
     .modal select.control option { background: var(--input-bg); color: var(--text); }
     .modal input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
 
@@ -822,6 +822,88 @@
     .prog-steps li.fail .dot { background: var(--btn-danger-bg); border-color: var(--btn-danger-bg); }
     .prog-steps li.fail .dot::after { content: '\2715'; }
     @media (prefers-reduced-motion: reduce) { .prog-steps li.active .dot { animation: none; } .prog-bar > div { transition: none; } }
+
+    /* ============================================================
+       v3.13 — PAINEL DE MOVIMENTAÇÕES
+       ============================================================ */
+    #movDashModal { z-index: 62; }
+    #movDetailModal { z-index: 64; }
+    .movdash-card { max-width: 1240px; height: calc(100vh - 32px); max-height: none; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .movdash-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--border-strong); }
+    .movdash-head h3 { font-size: 1.08rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; margin-right: auto; }
+    .movdash-head h3 small { font-weight: 600; font-size: .8rem; color: var(--m-sub); }
+    .movdash-body { flex: 1; overflow-y: auto; padding: 14px 20px 20px; }
+    .mv-filters { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.2fr 1.2fr 1.2fr 1fr; gap: 10px; align-items: end; }
+    .mv-filters .form-row { margin: 0; }
+    .mv-filters .span2 { grid-column: span 2; }
+    .mv-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .mv-tipos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+    .mv-chip { border: 1px solid var(--m-input-bd); background: transparent; color: var(--text); border-radius: 999px; padding: 6px 12px; font-size: .8rem; font-weight: 650; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+    .mv-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .mv-chip .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .mv-clear { margin-left: auto; font-size: .8rem; color: var(--accent); background: none; border: none; cursor: pointer; font-weight: 650; }
+    .mv-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+    .mv-kpi { background: var(--m-head-bg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 11px 13px; }
+    .mv-kpi .l { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--m-sub); }
+    .mv-kpi .v { font-size: 1.55rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
+    .mv-kpi .s { font-size: .74rem; color: var(--m-sub); }
+    .mv-charts { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .mv-card { background: var(--panel); border: 1px solid var(--border-strong); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+    .mv-card h4 { margin: 0 0 10px; font-size: .84rem; font-weight: 750; color: var(--text); display: flex; justify-content: space-between; gap: 8px; }
+    .mv-card h4 small { font-weight: 600; color: var(--m-sub); font-size: .72rem; }
+    .mv-months { display: flex; align-items: flex-end; gap: 6px; height: 128px; padding-top: 6px; }
+    .mv-month { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; height: 100%; justify-content: flex-end; }
+    .mv-month .pair { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; justify-content: center; }
+    .mv-month .b { width: 42%; max-width: 16px; border-radius: 4px 4px 0 0; min-height: 2px; }
+    .mv-month .b.e { background: #059669; } .mv-month .b.s { background: #dc2626; }
+    .mv-month span { font-size: .66rem; color: var(--m-sub); white-space: nowrap; }
+    .mv-legend { display: flex; gap: 12px; font-size: .72rem; color: var(--m-sub); margin-top: 6px; }
+    .mv-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+    .mv-bars { display: grid; gap: 7px; }
+    .mv-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; cursor: pointer; border-radius: 6px; padding: 2px 4px; background: none; border: none; text-align: left; color: var(--text); font: inherit; }
+    .mv-bar:hover, .mv-bar:focus-visible { background: var(--row-hover); outline: none; }
+    .mv-bar .t { font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mv-bar .n { font-size: .78rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .mv-bar .track { grid-column: 1 / -1; height: 6px; background: var(--m-head-bg); border-radius: 99px; overflow: hidden; }
+    .mv-bar .track b { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+    .mv-empty { font-size: .8rem; color: var(--m-sub); padding: 18px 4px; text-align: center; }
+    .mv-table-card { background: var(--panel); border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden; }
+    table.mv-table { width: 100%; border-collapse: collapse; font-size: .83rem; min-width: 900px; }
+    table.mv-table thead th { position: sticky; top: 0; background: var(--table-head); color: var(--m-sub); text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .4px; padding: 10px 12px; border-bottom: 1px solid var(--border-strong); white-space: nowrap; cursor: pointer; user-select: none; }
+    table.mv-table tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    table.mv-table tbody tr { cursor: pointer; }
+    table.mv-table tbody tr:hover, table.mv-table tbody tr:focus-visible { background: var(--m-ac-hover); outline: none; }
+    table.mv-table .sub { display: block; font-size: .74rem; color: var(--m-sub); margin-top: 2px; }
+    table.mv-table .qtd { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .qtd.pos { color: #059669; } .qtd.neg { color: #dc2626; }
+    [data-theme="dark"] .qtd.pos { color: #34d399; } [data-theme="dark"] .qtd.neg { color: #f87171; }
+    .badge-cad { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    [data-theme="dark"] .badge-cad { color: #93c5fd; }
+    .badge-edi { background: var(--m-head-bg); color: var(--m-sub); border-color: var(--border-strong); }
+    .mv-more { padding: 10px; text-align: center; }
+    .mv-status { padding: 30px 16px; text-align: center; color: var(--m-sub); font-size: .9rem; }
+    .mv-detail dl { display: grid; grid-template-columns: 170px 1fr; gap: 8px 14px; margin: 0; font-size: .88rem; }
+    .mv-detail dt { color: var(--m-sub); font-weight: 650; }
+    .mv-detail dd { margin: 0; color: var(--text); word-break: break-word; }
+    .mv-detail .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    @media (max-width: 1100px) {
+      .mv-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .mv-filters > :first-child { grid-column: span 2; }
+      .mv-charts { grid-template-columns: 1fr 1fr; }
+      .mv-charts .mv-card:first-child { grid-column: 1 / -1; }
+      .mv-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      #movDashModal { padding: 0; }
+      .movdash-card { height: 100vh; border-radius: 0; }
+      .movdash-head, .movdash-body { padding-left: 12px; padding-right: 12px; }
+      .mv-filters { grid-template-columns: 1fr 1fr; }
+      .mv-filters > :first-child { grid-column: 1 / -1; }
+      .mv-charts { grid-template-columns: 1fr; }
+      .mv-kpis { grid-template-columns: 1fr 1fr; }
+      .mv-detail dl { grid-template-columns: 1fr; gap: 2px; }
+      .mv-detail dd { margin-bottom: 8px; }
+    }
   </style>
 </head>
 <body>
@@ -844,6 +926,9 @@
            title="Patrimônio — equipamentos das unidades, seriais e preventivas (abre na aba do Patrimônio)" aria-label="Patrimônio: abrir o Equipamentos Online">
           <i class="ph ph-buildings"></i> Patrimônio
         </a>
+        <button class="btn btn-soft hidden" id="btnMov" onclick="openMovDash()" title="Painel de movimentações: entradas e saídas com filtros por período, cliente e unidade">
+          <i class="ph ph-arrows-left-right"></i> Movimentações
+        </button>
         <button class="btn btn-soft hidden" id="btnExport" onclick="exportToPDF()">
           <i class="ph ph-file-pdf"></i> Exportar PDF
         </button>
@@ -1081,6 +1166,61 @@
     </div>
   </div>
 
+  <!-- ============================ PAINEL DE MOVIMENTAÇÕES ============================ -->
+  <div id="movDashModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mvTitle">
+    <div class="modal-card movdash-card">
+      <div class="movdash-head">
+        <h3 id="mvTitle"><i class="ph ph-arrows-left-right"></i> Movimentações de Peças <small id="mvCount"></small></h3>
+        <button type="button" class="btn btn-soft" onclick="loadHistorico(true)" title="Ler o histórico novamente da planilha"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+        <button type="button" class="btn btn-soft" onclick="exportMovPdf()" title="Relatório em PDF das movimentações filtradas (com pré-visualização)"><i class="ph ph-file-pdf"></i> PDF</button>
+        <button class="modal-close" onclick="closeModal('movDashModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
+      </div>
+      <div class="movdash-body">
+        <div class="mv-filters">
+          <div class="form-row">
+            <label for="mvPeriodo">Período</label>
+              <select id="mvPeriodo" class="control">
+                <option value="tudo">Todo o período</option>
+                <option value="hoje">Hoje</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="mes">Este mês</option>
+                <option value="mesant">Mês anterior</option>
+                <option value="ano">Este ano</option>
+                <option value="custom">Personalizado</option>
+              </select>
+          </div>
+          <div class="form-row"><label for="mvDe">De</label><input type="date" id="mvDe" class="control"></div>
+          <div class="form-row"><label for="mvAte">Até</label><input type="date" id="mvAte" class="control"></div>
+          <div class="form-row"><label for="mvCliente">Cliente</label><select id="mvCliente" class="control"></select></div>
+          <div class="form-row"><label for="mvUnidade">Unidade</label><select id="mvUnidade" class="control"></select></div>
+          <div class="form-row"><label for="mvPeca">Peça</label><select id="mvPeca" class="control"></select></div>
+          <div class="form-row"><label for="mvTecnico">Técnico</label><select id="mvTecnico" class="control"></select></div>
+        </div>
+        <div class="mv-tipos" id="mvTipos" role="group" aria-label="Tipo de movimentação">
+          <button type="button" class="mv-chip" data-tipo="Saída" aria-pressed="true"><span class="dot" style="background:#dc2626"></span>Saídas</button>
+          <button type="button" class="mv-chip" data-tipo="Entrada" aria-pressed="true"><span class="dot" style="background:#059669"></span>Entradas</button>
+          <button type="button" class="mv-chip" data-tipo="Cadastro" aria-pressed="true"><span class="dot" style="background:#2563eb"></span>Cadastros</button>
+          <button type="button" class="mv-chip" data-tipo="Edição" aria-pressed="false"><span class="dot" style="background:#64748b"></span>Edições</button>
+          <input type="search" id="mvBusca" class="control" placeholder="Buscar: equipamento, série, observação…" style="flex:1 1 220px; max-width:340px; min-height:36px; padding:6px 11px">
+          <button type="button" class="mv-clear" onclick="limparFiltrosMov()">Limpar filtros</button>
+        </div>
+        <div id="mvConteudo"><div class="mv-status">Carregando movimentações…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="movDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mvdTitle">
+    <div class="modal-card mov-card mv-detail">
+      <div class="modal-head">
+        <h3 id="mvdTitle">Movimentação</h3>
+        <button class="modal-close" onclick="closeModal('movDetailModal')" aria-label="Fechar"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="mvdBody"></div>
+      <div class="modal-foot" id="mvdFoot"></div>
+    </div>
+  </div>
+
   <!-- ============================ MODAL: PROGRESSO DO COMPROVANTE ============================ -->
   <div id="progressModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="progTitle">
     <div class="modal-card progress-card">
@@ -1241,7 +1381,7 @@
     }
 
     /* ==================== NAVEGAÇÃO ENTRE VIEWS ==================== */
-    const HEADER_ACTION_IDS = ['btnExport', 'btnSync', 'btnNew'];
+    const HEADER_ACTION_IDS = ['btnMov', 'btnExport', 'btnSync', 'btnNew'];
 
     const VIEW_KEY = 'labmedic-pecas-view';
     let currentView = 'home', viewEscolhida = false, apiPronta = null, carregandoDados = null;
@@ -1344,7 +1484,11 @@
       syncThemeIcon();
       initCarousel();
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeModal('movementModal'); closeModal('itemFormModal'); closeModal('pdfPreviewModal'); }
+        if (e.key !== 'Escape') return;
+        // fecha só a janela que está por cima (ex.: o detalhe, sem fechar o painel de movimentações)
+        const ordem = ['pdfPreviewModal', 'movDetailModal', 'movementModal', 'itemFormModal', 'movDashModal'];
+        const aberto = ordem.find(id => !document.getElementById(id).classList.contains('hidden'));
+        if (aberto && !document.querySelector('.ac-list:not(.hidden)')) closeModal(aberto);
       });
 
       /* Tela inicial: ?view=dashboard, ou a última tela usada nesta aba (sobrevive a recarregar a página).
@@ -1594,6 +1738,7 @@
               <option value="entrada">➕ Dar Entrada</option>
               <option value="saida">➖ Dar Baixa (Saída)</option>
               <option value="editar">✏️ Editar Cadastro</option>
+              <option value="movs">📋 Ver Movimentações</option>
             </select>
           </td>
         </tr>
@@ -1719,6 +1864,7 @@
       if (action === 'entrada') openMovementModal(rowIndex, 'Entrada');
       else if (action === 'saida') openMovementModal(rowIndex, 'Saída');
       else if (action === 'editar') openEditModal(rowIndex);
+      else if (action === 'movs') { const it = rawInventoryData.find(i => i.rowIndex === rowIndex); openMovDash(it ? { peca: it.peca } : {}); }
     }
 
     function openMovementModal(rowIndex, tipo) {
@@ -1776,6 +1922,7 @@
       if (tipo === 'Saída') preencherSerie(false); // equipamento digitado sem clicar na sugestão: busca o serial agora
       const serieDestino = tipo === 'Saída' ? (document.getElementById('movSerieDestino').value.trim() || SERIAL_VAZIO) : '';
       const observacoes = document.getElementById('movObs').value.trim();
+      const vinc = tipo === 'Saída' ? clienteDaUnidade(unidade, equipDestino) : { cliente: '', cnpj: '' };
       const movItem = rawInventoryData.find(i => i.rowIndex === rowIndex);
 
       if (tipo === 'Saída') {
@@ -1785,7 +1932,7 @@
             !confirm('ATENÇÃO: o Apps Script em uso é uma versão antiga e NÃO grava a unidade nem o equipamento de destino no histórico.\n\nO saldo será baixado, mas o destino ficará em branco na aba de histórico.\n\nDeseja continuar mesmo assim?')) return;
       }
       const gerarDoc = tipo === 'Saída' && document.getElementById('movGerarComprovante').checked;
-      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, observacoes, dataHora: new Date().toLocaleString('pt-BR') };
+      const docData = { item: movItem, qtd: qtyInput, tecnico, unidade, equipDestino, serieDestino, observacoes, cliente: vinc.cliente, cnpj: vinc.cnpj, dataHora: new Date().toLocaleString('pt-BR') };
 
       closeModal('movementModal');
       if (gerarDoc) Progresso.iniciar(); // o operador acompanha do registro até a liberação do PDF
@@ -1800,7 +1947,8 @@
       }
 
       try {
-        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino, observacoes: observacoes });
+        const r = await postApi({ action: 'stockMovement', rowIndex: rowIndex, quantidade: delta, tipo: tipo, tecnico: tecnico, unidadeDestino: unidade, equipamentoDestino: equipDestino, serieDestino: serieDestino, observacoes: observacoes, clienteDestino: vinc.cliente, cnpjDestino: vinc.cnpj });
+        movData = null; // o painel de movimentações relê o histórico na próxima abertura
         if (gerarDoc) Progresso.etapa(1, r.unconfirmed ? 'Servidor não confirmou a gravação — confira a planilha depois.' : '');
         const d = r.data || {};
         if (r.unconfirmed) {
@@ -1915,7 +2063,9 @@
       equipamento: ['equipamento', 'descricaodoequipamento', 'descricaodobem', 'descricao', 'bem', 'item'],
       serie:       ['nseriepatrimonio', 'nserie', 'ndeserie', 'nodeserie', 'numerodeserie', 'serie', 'ndepatrimonio', 'nodepatrimonio', 'npatrimonio', 'numerodopatrimonio', 'patrimonio', 'tombamento', 'placa'],
       setor:       ['setor', 'departamento', 'localizacao', 'sala'],
-      categoria:   ['categoria', 'tipodeequipamento', 'tipo', 'classificacao', 'classe', 'grupo']
+      categoria:   ['categoria', 'tipodeequipamento', 'tipo', 'classificacao', 'classe', 'grupo'],
+      cliente:     ['cliente', 'nomedocliente', 'razaosocial', 'contratante'],
+      cnpj:        ['cnpj', 'cnpjdocliente', 'cnpjcliente']
     };
     const keyOf = t => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -1945,7 +2095,7 @@
           // v3.8 — TODAS as colunas que podem conter o serial, em ordem de preferência:
           // 1º colunas de série/serial (qualquer grafia: "Nº Série", "Número Série", "Serial", "S/N", "SN"…),
           // 2º colunas de patrimônio/tombamento. Para cada linha usa a PRIMEIRA que estiver preenchida.
-          const ocupadas = ['unidade', 'equipamento', 'setor', 'categoria'].map(f => map[f]).filter(Boolean);
+          const ocupadas = ['unidade', 'equipamento', 'setor', 'categoria', 'cliente', 'cnpj'].map(f => map[f]).filter(Boolean);
           const livres = keys.filter(k => ocupadas.indexOf(k) < 0);
           const ehSerial = k => /serie|serial/.test(k) || /^(n|no|num|numero)?(sn|ns)$/.test(k);
           const ehPatr = k => /patrimonio|tombamento|placa/.test(k);
@@ -1958,7 +2108,7 @@
           const v = r[k] == null ? '' : String(r[k]).trim();
           if (v && !/^(-+|—|n\/?a|s\/?n|sem( n[uú]mero| serial)?|nao (possui|consta|localizado)|não (possui|consta|localizado)|serial não localizado|0)$/i.test(v)) { serie = v; break; }
         }
-        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: serie, setor: g('setor'), categoria: g('categoria') });
+        out.push({ unidade: g('unidade'), equipamento: g('equipamento'), serie: serie, setor: g('setor'), categoria: g('categoria'), cliente: g('cliente'), cnpj: g('cnpj') });
       });
       return out.filter(u => u.unidade);
     }
@@ -2129,6 +2279,307 @@
     }
     document.addEventListener('DOMContentLoaded', initExitAutocomplete);
 
+
+    /* ==================== PAINEL DE MOVIMENTAÇÕES (v3.13) ==================== */
+    let movData = null, movCarregando = null, movSort = { k: 'data', d: -1 }, movLimite = 200, movFiltrada = [];
+    const MOV_TIPOS = ['Saída', 'Entrada', 'Cadastro', 'Edição'];
+
+    function clienteDaUnidade(unidade, equip) {
+      const un = normTxt(unidade), eq = normTxt(equip);
+      if (!un) return { cliente: '', cnpj: '' };
+      const lista = (unidadesData || []).filter(u => normTxt(u.unidade) === un);
+      const r = lista.find(u => eq && normTxt(u.equipamento) === eq && (u.cliente || u.cnpj)) || lista.find(u => u.cliente || u.cnpj);
+      return r ? { cliente: r.cliente || '', cnpj: r.cnpj || '' } : { cliente: '', cnpj: '' };
+    }
+    function parseDataMov(v) {
+      if (!v) return null;
+      let m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+      if (m) return new Date(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+      m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+      if (m) return new Date(+m[3], m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+      const d = new Date(v); return isNaN(d) ? null : d;
+    }
+    const fmtDataHora = d => d ? d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+    const isoDia = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    function tipoMov(t) { const k = normTxt(t); return k.startsWith('sa') ? 'Saída' : k.startsWith('en') ? 'Entrada' : k.startsWith('cad') ? 'Cadastro' : k.startsWith('ed') ? 'Edição' : (t || '—'); }
+
+    async function openMovDash(pre) {
+      openModal('movDashModal');
+      initMovFiltros();
+      if (pre) aplicarPreFiltro(pre);
+      await loadHistorico(false);
+      if (pre) aplicarPreFiltro(pre); // reaplica depois que as listas de opções existem
+      renderMov();
+    }
+
+    function aplicarPreFiltro(pre) {
+      if (pre.peca !== undefined) setSelectValor('mvPeca', pre.peca);
+      if (pre.unidade !== undefined) setSelectValor('mvUnidade', pre.unidade);
+      if (pre.cliente !== undefined) setSelectValor('mvCliente', pre.cliente);
+    }
+    function setSelectValor(id, v) {
+      const el = document.getElementById(id);
+      if (v && ![...el.options].some(o => o.value === v)) el.add(new Option(v, v));
+      el.value = v || '';
+    }
+
+    async function loadHistorico(force) {
+      if (movData && !force) return;
+      if (movCarregando) return movCarregando;
+      const box = document.getElementById('mvConteudo');
+      box.innerHTML = '<div class="mv-status"><i class="ph ph-spinner spin"></i> Lendo o histórico da planilha…</div>';
+      movCarregando = (async () => {
+        try {
+          if (apiPronta) await apiPronta;
+          if (isDemoMode || !API_URL) { movData = demoMovs(); return; }
+          const u = new URL(API_URL); u.searchParams.set('action', 'historico'); u.searchParams.set('t', Date.now());
+          const [res] = await Promise.all([fetch(u.toString()), loadUnidades().catch(() => {})]);
+          const j = JSON.parse(await res.text());
+          if (Array.isArray(j)) throw new Error('o Apps Script publicado é anterior à versão 3.8 e ainda não envia o histórico. Publique a nova versão do script (Implantar → Gerenciar implantações → Editar → Nova versão).');
+          if (!j || j.ok === false) throw new Error((j && j.error) || 'resposta inválida do servidor');
+          movData = prepararMovs((j.data && j.data.rows) || []);
+        } catch (e) {
+          movData = null;
+          box.innerHTML = `<div class="mv-status"><i class="ph ph-warning-circle" style="font-size:1.6rem;color:var(--danger)"></i><br>Não foi possível carregar as movimentações: ${escapeHtml(e.message || e)}</div>`;
+          throw e;
+        } finally { movCarregando = null; }
+      })();
+      try { await movCarregando; } catch (e) { return; }
+      preencherOpcoesMov();
+      if (force) showToast('Movimentações atualizadas da planilha.', 'ok');
+      renderMov();
+    }
+
+    function prepararMovs(rows) {
+      return rows.map(r => {
+        const tipo = tipoMov(r.tipo), qtd = Math.abs(Number(r.quantidade) || 0);
+        const vinc = r.unidadeDestino ? clienteDaUnidade(r.unidadeDestino, r.equipamentoDestino) : { cliente: '', cnpj: '' };
+        return { ...r, tipo, qtd, dt: parseDataMov(r.data),
+          cliente: r.clienteDestino || vinc.cliente, cnpj: r.cnpjDestino || vinc.cnpj,
+          sinal: tipo === 'Saída' ? -1 : (tipo === 'Entrada' || tipo === 'Cadastro') ? 1 : 0 };
+      });
+    }
+    function demoMovs() {
+      const hoje = new Date(), d = n => new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - n, 9 + (n % 8), 15);
+      const b = [['Entrada', 'Bioquímica', 'Lâmpada halógena 12V 20W', 10, '', '', '', 'Ana'], ['Saída', 'Bioquímica', 'Lâmpada halógena 12V 20W', 2, 'Unidade Centro', 'Bioquímica - Analisador A', 'BQ-1001', 'Bruno'],
+        ['Saída', 'Analisador Hematológico', 'Reagente de lise (solução)', 1, 'Unidade Norte', 'Coagulação - Coagulômetro C', 'CG-3003', 'Carla'], ['Entrada', 'Centrífuga de Bancada', 'Escovas do motor elétrico', 4, '', '', '', 'Ana'],
+        ['Saída', 'Centrífuga de Bancada', 'Escovas do motor elétrico', 1, 'Unidade Centro', 'Hematologia - Contador H', 'HM-2002', 'Bruno']];
+      return prepararMovs(b.concat(b, b).map((x, i) => ({ linha: i + 2, data: isoDia(d(i * 9)) + 'T10:00:00', tipo: x[0], equipamento: x[1], peca: x[2], quantidade: x[3], unidadeDestino: x[4], equipamentoDestino: x[5], serie: x[6], tecnico: x[7], clienteDestino: x[4] ? 'Cliente Demonstração' : '' })));
+    }
+
+    let movFiltrosProntos = false;
+    function initMovFiltros() {
+      if (movFiltrosProntos) return; movFiltrosProntos = true;
+      const re = () => { movLimite = 200; renderMov(); };
+      document.getElementById('mvPeriodo').addEventListener('change', e => { aplicarPeriodo(e.target.value); re(); });
+      ['mvDe', 'mvAte'].forEach(id => document.getElementById(id).addEventListener('change', () => { document.getElementById('mvPeriodo').value = 'custom'; re(); }));
+      document.getElementById('mvCliente').addEventListener('change', () => { preencherOpcoesMov(); re(); });
+      ['mvUnidade', 'mvPeca', 'mvTecnico'].forEach(id => document.getElementById(id).addEventListener('change', re));
+      document.getElementById('mvBusca').addEventListener('input', re);
+      document.querySelectorAll('#mvTipos .mv-chip').forEach(c => c.addEventListener('click', () => { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); re(); }));
+    }
+    function aplicarPeriodo(p) {
+      const h = new Date(), de = document.getElementById('mvDe'), ate = document.getElementById('mvAte');
+      const z = d => isoDia(d);
+      if (p === 'tudo') { de.value = ''; ate.value = ''; }
+      else if (p === 'hoje') { de.value = ate.value = z(h); }
+      else if (p === '7' || p === '30') { de.value = z(new Date(h.getFullYear(), h.getMonth(), h.getDate() - (+p - 1))); ate.value = z(h); }
+      else if (p === 'mes') { de.value = z(new Date(h.getFullYear(), h.getMonth(), 1)); ate.value = z(h); }
+      else if (p === 'mesant') { de.value = z(new Date(h.getFullYear(), h.getMonth() - 1, 1)); ate.value = z(new Date(h.getFullYear(), h.getMonth(), 0)); }
+      else if (p === 'ano') { de.value = z(new Date(h.getFullYear(), 0, 1)); ate.value = z(h); }
+    }
+    function limparFiltrosMov() {
+      ['mvCliente', 'mvUnidade', 'mvPeca', 'mvTecnico', 'mvBusca', 'mvDe', 'mvAte'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('mvPeriodo').value = 'tudo';
+      document.querySelectorAll('#mvTipos .mv-chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.tipo === 'Edição' ? 'false' : 'true'));
+      preencherOpcoesMov(); movLimite = 200; renderMov();
+    }
+    function preencherOpcoesMov() {
+      if (!movData) return;
+      const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      const fill = (id, vals, todos) => {
+        const el = document.getElementById(id), atual = el.value;
+        el.innerHTML = `<option value="">${todos}</option>` + vals.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+        if (atual) setSelectValor(id, atual);
+      };
+      const cli = document.getElementById('mvCliente').value;
+      fill('mvCliente', uniq(movData.map(m => m.cliente)), 'Todos os clientes');
+      fill('mvUnidade', uniq(movData.filter(m => !cli || m.cliente === cli).map(m => m.unidadeDestino)), 'Todas as unidades');
+      fill('mvPeca', uniq(movData.map(m => m.peca)), 'Todas as peças');
+      fill('mvTecnico', uniq(movData.map(m => m.tecnico)), 'Todos os técnicos');
+    }
+
+    function filtrarMovs() {
+      const v = id => document.getElementById(id).value;
+      const de = v('mvDe') ? new Date(v('mvDe') + 'T00:00:00') : null, ate = v('mvAte') ? new Date(v('mvAte') + 'T23:59:59') : null;
+      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[aria-pressed="true"]')].map(c => c.dataset.tipo);
+      const cli = v('mvCliente'), un = v('mvUnidade'), pc = v('mvPeca'), tec = v('mvTecnico');
+      const termos = normTxt(v('mvBusca')).split(/\s+/).filter(Boolean);
+      return (movData || []).filter(m => {
+        if (!tipos.includes(m.tipo) && MOV_TIPOS.includes(m.tipo)) return false;
+        if (de && (!m.dt || m.dt < de)) return false;
+        if (ate && (!m.dt || m.dt > ate)) return false;
+        if (cli && m.cliente !== cli) return false;
+        if (un && m.unidadeDestino !== un) return false;
+        if (pc && m.peca !== pc) return false;
+        if (tec && m.tecnico !== tec) return false;
+        if (termos.length) {
+          const t = normTxt([m.peca, m.equipamento, m.unidadeDestino, m.equipamentoDestino, m.serie, m.observacoes, m.tecnico, m.cliente, m.cnpj].join(' '));
+          if (!termos.every(x => t.includes(x))) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderMov() {
+      const box = document.getElementById('mvConteudo');
+      if (!movData) return;
+      const d = filtrarMovs(); movFiltrada = d;
+      document.getElementById('mvCount').textContent = `· ${d.length} de ${movData.length} registro(s)`;
+      if (!movData.length) { box.innerHTML = '<div class="mv-status"><i class="ph ph-tray" style="font-size:1.6rem"></i><br>Ainda não há movimentações registradas no histórico.</div>'; return; }
+      const said = d.filter(m => m.tipo === 'Saída'), entr = d.filter(m => m.sinal > 0);
+      const soma = l => l.reduce((a, m) => a + m.qtd, 0);
+      const unidades = new Set(said.map(m => m.unidadeDestino).filter(Boolean)).size;
+      const pecas = new Set(d.map(m => m.peca).filter(Boolean)).size;
+      const kpi = (l, v, sub) => `<div class="mv-kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+      const top = (lista, chave, filtro) => {
+        const c = {}; lista.forEach(m => { const k = m[chave]; if (k) c[k] = (c[k] || 0) + m.qtd; });
+        const e = Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 8), max = e.length ? e[0][1] : 1;
+        return e.length ? `<div class="mv-bars">${e.map(([k, n]) => `<button type="button" class="mv-bar" data-f="${filtro}" data-v="${escapeHtml(k)}" title="Filtrar por ${escapeHtml(k)}"><span class="t">${escapeHtml(k)}</span><span class="n">${n}</span><span class="track"><b style="width:${Math.max(4, n / max * 100)}%"></b></span></button>`).join('')}</div>` : '<div class="mv-empty">Sem saídas no filtro atual.</div>';
+      };
+      // meses: até 12 meses terminando no mês mais recente do filtro
+      const comData = d.filter(m => m.dt);
+      let meses = '';
+      if (comData.length) {
+        const fim = new Date(Math.max(...comData.map(m => m.dt))), ini = new Date(Math.min(...comData.map(m => m.dt)));
+        const lista = []; let cur = new Date(fim.getFullYear(), fim.getMonth(), 1);
+        while (lista.length < 12 && cur >= new Date(ini.getFullYear(), ini.getMonth(), 1)) { lista.unshift(cur); cur = new Date(cur.getFullYear(), cur.getMonth() - 1, 1); }
+        const val = lista.map(mm => { const f = m => m.dt.getFullYear() === mm.getFullYear() && m.dt.getMonth() === mm.getMonth(); return [soma(entr.filter(m => m.dt && f(m))), soma(said.filter(m => m.dt && f(m)))]; });
+        const mx = Math.max(1, ...val.flat());
+        meses = `<div class="mv-months">${lista.map((mm, i) => `<div class="mv-month" title="${mm.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}: ${val[i][0]} entrada(s), ${val[i][1]} saída(s)"><div class="pair"><div class="b e" style="height:${val[i][0] / mx * 100}%"></div><div class="b s" style="height:${val[i][1] / mx * 100}%"></div></div><span>${mm.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}/${String(mm.getFullYear()).slice(2)}</span></div>`).join('')}</div>
+          <div class="mv-legend"><span><i style="background:#059669"></i>Entradas (qtd)</span><span><i style="background:#dc2626"></i>Saídas (qtd)</span></div>`;
+      } else meses = '<div class="mv-empty">Sem registros no período.</div>';
+
+      const ord = [...d].sort((a, b) => {
+        const k = movSort.k, va = k === 'data' ? (a.dt ? +a.dt : 0) : k === 'qtd' ? a.qtd * (a.sinal || 1) : String(a[k] || ''), vb = k === 'data' ? (b.dt ? +b.dt : 0) : k === 'qtd' ? b.qtd * (b.sinal || 1) : String(b[k] || '');
+        return (typeof va === 'number' ? va - vb : va.localeCompare(vb, 'pt-BR')) * movSort.d;
+      });
+      const badge = t => `<span class="badge ${t === 'Saída' ? 'badge-alta' : t === 'Entrada' ? 'badge-baixa' : t === 'Cadastro' ? 'badge-cad' : 'badge-edi'}">${escapeHtml(t)}</span>`;
+      const th = (k, l) => `<th data-k="${k}" aria-sort="${movSort.k === k ? (movSort.d > 0 ? 'ascending' : 'descending') : 'none'}">${l}${movSort.k === k ? (movSort.d > 0 ? ' ↑' : ' ↓') : ''}</th>`;
+      const linhas = ord.slice(0, movLimite).map(m => `<tr tabindex="0" data-l="${m.linha}">
+          <td style="white-space:nowrap">${fmtDataHora(m.dt)}</td>
+          <td>${badge(m.tipo)}</td>
+          <td><b>${escapeHtml(m.peca || '—')}</b><span class="sub">${escapeHtml(m.equipamento || '')}</span></td>
+          <td class="qtd ${m.sinal > 0 ? 'pos' : m.sinal < 0 ? 'neg' : ''}">${m.sinal > 0 ? '+' : m.sinal < 0 ? '−' : ''}${m.qtd}</td>
+          <td>${m.unidadeDestino ? escapeHtml(m.unidadeDestino) : '<span class="sub">—</span>'}${m.cliente ? `<span class="sub">${escapeHtml(m.cliente)}${m.cnpj ? ' · CNPJ ' + escapeHtml(m.cnpj) : ''}</span>` : ''}</td>
+          <td>${escapeHtml(m.equipamentoDestino || '—')}${m.serie ? `<span class="sub">Série: ${escapeHtml(m.serie)}</span>` : ''}</td>
+          <td>${escapeHtml(m.tecnico || '—')}</td>
+        </tr>`).join('');
+
+      box.innerHTML = `
+        <div class="mv-kpis">
+          ${kpi('Movimentações', d.length, `${said.length} saída(s) · ${entr.length} entrada(s)`)}
+          ${kpi('Peças retiradas', soma(said), 'quantidade total em saídas')}
+          ${kpi('Peças recebidas', soma(entr), 'entradas + cadastros')}
+          ${kpi('Unidades atendidas', unidades, 'com ao menos uma saída')}
+          ${kpi('Peças diferentes', pecas, 'tipos movimentados')}
+        </div>
+        <div class="mv-charts">
+          <div class="mv-card"><h4>Entradas e saídas por mês <small>quantidade</small></h4>${meses}</div>
+          <div class="mv-card"><h4>Unidades que mais receberam <small>clique para filtrar</small></h4>${top(said, 'unidadeDestino', 'mvUnidade')}</div>
+          <div class="mv-card"><h4>Peças mais retiradas <small>clique para filtrar</small></h4>${top(said, 'peca', 'mvPeca')}</div>
+        </div>
+        <div class="mv-table-card"><div class="table-scroll">
+          <table class="mv-table"><thead><tr>${th('data', 'Data/Hora')}${th('tipo', 'Tipo')}${th('peca', 'Peça')}${th('qtd', 'Qtd')}${th('unidadeDestino', 'Destino')}${th('equipamentoDestino', 'Equipamento destino')}${th('tecnico', 'Técnico')}</tr></thead>
+          <tbody>${linhas || '<tr><td colspan="7" class="mv-status" style="cursor:default">Nenhuma movimentação com os filtros atuais.</td></tr>'}</tbody></table>
+        </div>${ord.length > movLimite ? `<div class="mv-more"><button type="button" class="btn btn-soft" id="mvMais">Mostrar mais ${Math.min(200, ord.length - movLimite)} de ${ord.length - movLimite} restantes</button></div>` : ''}</div>`;
+
+      box.querySelectorAll('.mv-bar').forEach(b => b.onclick = () => { setSelectValor(b.dataset.f, b.dataset.v); movLimite = 200; renderMov(); });
+      box.querySelectorAll('thead th[data-k]').forEach(t => t.onclick = () => { const k = t.dataset.k; movSort = { k, d: movSort.k === k ? -movSort.d : (k === 'data' ? -1 : 1) }; renderMov(); });
+      box.querySelectorAll('tbody tr[data-l]').forEach(tr => {
+        const abrir = () => abrirDetalheMov(movData.find(m => String(m.linha) === tr.dataset.l));
+        tr.onclick = abrir; tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } };
+      });
+      const mais = document.getElementById('mvMais'); if (mais) mais.onclick = () => { movLimite += 200; renderMov(); };
+    }
+
+    function abrirDetalheMov(m) {
+      if (!m) return;
+      const linha = (l, v) => v ? `<dt>${l}</dt><dd>${v}</dd>` : '';
+      document.getElementById('mvdTitle').textContent = `${m.tipo} · ${fmtDataHora(m.dt)}`;
+      document.getElementById('mvdBody').innerHTML = `<dl>
+        ${linha('Tipo', escapeHtml(m.tipo))}
+        ${linha('Data / Hora', fmtDataHora(m.dt))}
+        ${linha('Peça', '<b>' + escapeHtml(m.peca) + '</b>')}
+        ${linha('Equipamento de origem', escapeHtml(m.equipamento))}
+        ${linha('Quantidade', `${m.sinal > 0 ? '+' : m.sinal < 0 ? '−' : ''}${m.qtd}`)}
+        ${linha('Saldo após a operação', m.saldo !== null && m.saldo !== undefined ? String(m.saldo) : '')}
+        ${linha('Cliente', escapeHtml(m.cliente))}
+        ${linha('CNPJ', escapeHtml(m.cnpj))}
+        ${linha('Unidade de destino', escapeHtml(m.unidadeDestino))}
+        ${linha('Equipamento na unidade', escapeHtml(m.equipamentoDestino))}
+        ${linha('Nº de série / Patrimônio', escapeHtml(m.serie))}
+        ${linha('Técnico responsável', escapeHtml(m.tecnico))}
+        ${linha('Observações', escapeHtml(m.observacoes))}
+        ${linha('Linha na planilha', 'Historico_Movimentacoes · linha ' + m.linha)}
+      </dl>
+      <div class="links">
+        ${m.peca ? `<button type="button" class="mv-chip" data-pf="peca">Todas desta peça</button>` : ''}
+        ${m.unidadeDestino ? `<button type="button" class="mv-chip" data-pf="unidade">Todas desta unidade</button>` : ''}
+        ${m.cliente ? `<button type="button" class="mv-chip" data-pf="cliente">Todas deste cliente</button>` : ''}
+      </div>`;
+      document.getElementById('mvdFoot').innerHTML = `<button type="button" class="btn btn-soft" onclick="closeModal('movDetailModal')">Fechar</button>` +
+        (m.tipo === 'Saída' ? `<button type="button" class="btn btn-primary" id="mvdComprovante"><i class="ph ph-file-pdf"></i> Reemitir comprovante</button>` : '');
+      document.querySelectorAll('#mvdBody [data-pf]').forEach(b => b.onclick = () => {
+        const f = b.dataset.pf; closeModal('movDetailModal');
+        if (f === 'peca') setSelectValor('mvPeca', m.peca);
+        if (f === 'unidade') { setSelectValor('mvCliente', ''); preencherOpcoesMov(); setSelectValor('mvUnidade', m.unidadeDestino); }
+        if (f === 'cliente') { setSelectValor('mvCliente', m.cliente); preencherOpcoesMov(); }
+        movLimite = 200; renderMov();
+      });
+      const bc = document.getElementById('mvdComprovante');
+      if (bc) bc.onclick = () => {
+        const inv = rawInventoryData.find(i => i.peca === m.peca && (!m.equipamento || i.equipamento === m.equipamento)) || {};
+        gerarComprovanteSaida({
+          item: { peca: m.peca, equipamento: m.equipamento, categoria: inv.categoria || '', quantidade: (m.saldo !== null && m.saldo !== undefined ? Number(m.saldo) : 0) + m.qtd },
+          qtd: m.qtd, tecnico: m.tecnico, unidade: m.unidadeDestino, equipDestino: m.equipamentoDestino, serieDestino: m.serie || SERIAL_VAZIO,
+          observacoes: m.observacoes, cliente: m.cliente, cnpj: m.cnpj, dataHora: fmtDataHora(m.dt) + ' (2ª via)'
+        });
+      };
+      openModal('movDetailModal');
+    }
+
+    function exportMovPdf() {
+      if (!movFiltrada.length) { showToast('Não há movimentações no filtro atual para exportar.', 'err'); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const said = movFiltrada.filter(m => m.tipo === 'Saída'), entr = movFiltrada.filter(m => m.sinal > 0), soma = l => l.reduce((a, m) => a + m.qtd, 0);
+      doc.setFillColor(27, 54, 93); doc.rect(0, 0, 297, 22, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(255, 255, 255);
+      doc.text('GRUPO LABMEDIC - Relatório de movimentações de peças', 14, 13);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(200, 215, 235);
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 283, 13, { align: 'right' });
+      const v = id => document.getElementById(id).value;
+      const per = v('mvDe') || v('mvAte') ? `${v('mvDe') ? new Date(v('mvDe') + 'T00:00').toLocaleDateString('pt-BR') : 'início'} a ${v('mvAte') ? new Date(v('mvAte') + 'T00:00').toLocaleDateString('pt-BR') : 'hoje'}` : 'Todo o período';
+      const tipos = [...document.querySelectorAll('#mvTipos .mv-chip[aria-pressed="true"]')].map(c => c.dataset.tipo).join(', ');
+      doc.setFontSize(9); doc.setTextColor(60, 60, 60);
+      doc.text(`Período: ${per}  |  Tipos: ${tipos}  |  Cliente: ${v('mvCliente') || 'Todos'}  |  Unidade: ${v('mvUnidade') || 'Todas'}  |  Peça: ${v('mvPeca') || 'Todas'}  |  Técnico: ${v('mvTecnico') || 'Todos'}${v('mvBusca') ? '  |  Busca: ' + v('mvBusca') : ''}`, 14, 29, { maxWidth: 269 });
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(27, 54, 93);
+      doc.text(`${movFiltrada.length} movimentação(ões)  ·  ${soma(said)} peça(s) retirada(s)  ·  ${soma(entr)} recebida(s)  ·  ${new Set(said.map(m => m.unidadeDestino).filter(Boolean)).size} unidade(s) atendida(s)`, 14, 36);
+      const ord = [...movFiltrada].sort((a, b) => (b.dt || 0) - (a.dt || 0));
+      doc.autoTable({
+        startY: 40, theme: 'striped',
+        head: [['Data/Hora', 'Tipo', 'Peça', 'Equip. origem', 'Qtd', 'Cliente / CNPJ', 'Unidade destino', 'Equip. destino', 'Série', 'Técnico', 'Observações']],
+        body: ord.map(m => [fmtDataHora(m.dt), m.tipo, m.peca, m.equipamento, (m.sinal > 0 ? '+' : m.sinal < 0 ? '-' : '') + m.qtd, [m.cliente, m.cnpj].filter(Boolean).join('\nCNPJ '), m.unidadeDestino, m.equipamentoDestino, m.serie, m.tecnico, m.observacoes]),
+        headStyles: { fillColor: [44, 62, 80], fontSize: 7.5 }, bodyStyles: { fontSize: 7.2, textColor: [40, 40, 40] }, styles: { cellPadding: 1.6 },
+        columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 14 }, 2: { cellWidth: 34, fontStyle: 'bold' }, 3: { cellWidth: 22 }, 4: { cellWidth: 9, halign: 'center' }, 5: { cellWidth: 34 }, 6: { cellWidth: 30 }, 7: { cellWidth: 28 }, 8: { cellWidth: 18 }, 9: { cellWidth: 20 }, 10: { cellWidth: 37 } },
+        margin: { left: 14, right: 14 },
+        didParseCell: h => { if (h.section === 'body' && h.column.index === 4) { const s = String(h.cell.raw); h.cell.styles.textColor = s.startsWith('-') ? [185, 28, 28] : s.startsWith('+') ? [4, 120, 87] : [80, 80, 80]; h.cell.styles.fontStyle = 'bold'; } },
+        didDrawPage: () => { doc.setFontSize(7.5); doc.setTextColor(150, 150, 150); doc.text('Fonte: Google Sheets – Historico_Movimentacoes', 14, 203); doc.text(`Página ${doc.internal.getNumberOfPages()}`, 283, 203, { align: 'right' }); }
+      });
+      showPdfPreview(doc, `Movimentacoes_Pecas_${isoDia(new Date())}.pdf`, null, `Pré-visualização · Movimentações (${movFiltrada.length})`);
+    }
+
     /* ==================== COMPROVANTE DE SAÍDA (PDF A4) ==================== */
     async function gerarComprovanteSaida(d, prog) {
       const P = prog && prog.ativo ? prog : null;
@@ -2163,6 +2614,7 @@
       ], 34);
       if (P) { P.el('progMsg').textContent = 'Montando o comprovante: destino…'; await pausa(180); }
       y = section('DESTINO', [
+        ...(d.cliente ? [['Cliente', d.cliente + (d.cnpj ? '  ·  CNPJ ' + d.cnpj : '')]] : []),
         ['Unidade de destino', d.unidade], ['Equipamento na unidade', d.equipDestino],
         ['Nº de série / Patrimônio', d.serieDestino || SERIAL_VAZIO]
       ], y);
@@ -2351,6 +2803,7 @@
 
       try {
         const r = await postApi(payload);
+        movData = null;
         showToast(r.unconfirmed ? 'Registro enviado, mas o servidor não confirmou a gravação. Verifique a planilha.' : 'Registro salvo com sucesso!', r.unconfirmed ? 'err' : 'ok');
         setTimeout(fetchData, 1200);
       } catch (err) {
